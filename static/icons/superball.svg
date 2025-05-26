@@ -1,0 +1,11 @@
+<svg width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+  <path fill="#ffffff" stroke="#000" opacity="undefined" d="m13,24.92117c-6.62983,0 -12,-5.33489 -12,-11.92117c0,-6.58628 5.37017,-11.92117 12,-11.92117c6.62983,0 12,5.33489 12,11.92117c0,6.58628 -5.37017,11.92117 -12,11.92117z" id="svg_1"/>
+  <path fill="#0000ff" stroke="#000" opacity="undefined" d="m1,13c0,-6.58628 5.37017,-11.92117 12,-11.92117c6.62983,0 12,5.33489 12,11.92117l-24,0z" id="svg_12"/>
+  <rect stroke-width="0" transform="rotate(-45, 19.5, 6.5)" id="svg_8" height="3" width="5" y="5" x="17" stroke="#000" fill="#ff0000"/>
+  <rect stroke-width="0" transform="rotate(45, 6.5, 6.5)" id="svg_7" height="3" width="5" y="5" x="4" stroke="#000" fill="#ff0000"/>
+  <path fill="#fff" stroke="#000" opacity="NaN" d="m1,13.0345l23.88666,-0.0345" id="svg_2"/>
+  <ellipse fill="#fff" stroke="#000" cx="13" cy="13" id="svg_3" rx="3" ry="3"/>
+  <ellipse fill="#fff" stroke="#000" cx="13" cy="13" id="svg_4" rx="1" ry="1"/>
+  <path fill="#fff" stroke="#000" opacity="NaN" d="m0.9409,12.84236" id="svg_6"/>
+  <path transform="translate(478.37973829415137,201.57973829415144)" id="svg_5" d="m3.3538,5.75564l4.45231,2.99651l2.07972,-2.25303l-2.85961,-3.81282l-3.67242,3.06934z" opacity="NaN" fill-opacity="0" stroke="#000" fill="#0fffff"/>
+</svg>
