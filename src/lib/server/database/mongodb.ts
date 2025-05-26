@@ -1,7 +1,5 @@
-import { env } from "$env/dynamic/private";
+import { CONNECTION_STRING } from "$env/static/private";
 import { Db, MongoClient } from "mongodb";
 
-const connectionString: string = env["CONNECTION_STRING"] || "";
-
-export const mongo: Db = new MongoClient(connectionString)
+export const mongo: Db = new MongoClient(CONNECTION_STRING)
     .db("Pokerole20")
