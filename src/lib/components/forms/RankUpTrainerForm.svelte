@@ -3,7 +3,7 @@
 
     import type { RankUpSetting } from '$lib/types/rank';
     import type { PokemonSkill } from '$lib/constants/skills';
-    import { rankUpSettings } from '$lib/constants/rankUpConfigs';
+    import { rankAchievements, rankUpSettings } from '$lib/constants/rankUpConfigs';
     import type { DbPokemonAttribute, DbPokemonSocial } from '$lib/types/mongo/pokemon';
 
     import t from '$lib/i18n/i18n.svelte';
@@ -66,6 +66,11 @@
             {} as any,
         );
 
+        updatedTrainer.achievements = rankAchievements[rankUpSetting.to].map((achievement) => [
+            achievement,
+            false,
+        ]);
+
         updatedTrainer.rank = rankUpSetting.to;
         updateTrainer(updatedTrainer);
         isOpen = false;
@@ -88,7 +93,7 @@
             <RankUpAttributes
                 {stat}
                 bind:attributes
-                onNextTab={() => (currentTab = 'Capacités')}
+                onNextTab={() => (currentTab = 'character.socials')}
                 attributePoints={rankUpSetting.config.attributePoints}
             ></RankUpAttributes>
         {:else if currentTab === 'character.socials'}
@@ -96,14 +101,14 @@
                 {stat}
                 bind:socials
                 onNextTab={() => (currentTab = 'character.skills')}
-                onPrevTab={() => (currentTab = 'Capacités')}
+                onPrevTab={() => (currentTab = 'character.socials')}
                 socialPoints={rankUpSetting.config.socialPoints}
             ></RankUpSocials>
         {:else if currentTab === 'character.skills'}
             <RankUpSkills
                 {stat}
                 bind:skills
-                onNextTab={() => (currentTab = 'Résumé')}
+                onNextTab={() => (currentTab = 'character.summary')}
                 onPrevTab={() => (currentTab = 'character.socials')}
                 skillPoints={rankUpSetting.config.skillPoints}
                 skillLimit={rankUpSetting.config.skillLimit}
