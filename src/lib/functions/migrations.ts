@@ -16,24 +16,23 @@ export const applyMigrationsToPokemon = (pokemons: WithId<DbPartnerPokemon>[]) =
     });
 }
 
+const generateBoxes = (currentAmount: number, maxAmount: number) => Array.from({ length: maxAmount - currentAmount }).map((_, i) => ({
+    id: parseInt(crypto.getRandomValues(new Uint32Array(1))[0].toString()),
+    name: `${t('boxes.form.new-box-name')} ${i + currentAmount}`,
+}));
+
 export const applyMigrationsToBoxes = (boxes: Box[], defaultName: string) => {
     /* Update 25/05: adding boxes */
     if (boxes.length === 0) {
         return [{
             id: 0,
             name: defaultName
-        }];
+        }, ...generateBoxes(1, 20)];
     }
 
+    /* Update 26/05: fixing box amount to 19 + pokémon team = 20*/
     if (boxes.length !== 20) {
-        const additionalBoxes: Box[] = Array.from({ length: 20 - boxes.length }).map((_, i) => (
-            {
-                id: parseInt(crypto.getRandomValues(new Uint32Array(1))[0].toString()),
-                name: `${t('boxes.form.new-box-name')} ${i + boxes.length}`,
-            }
-        ));
-
-        return [...boxes, ...additionalBoxes];
+        return [...boxes, ...generateBoxes(boxes.length, 20)];
     }
 
     return boxes;

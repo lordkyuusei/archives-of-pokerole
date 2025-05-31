@@ -49,10 +49,13 @@
     --transition-function: cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
-* {
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-color) var(--background-color);
 }
 
 body {
@@ -151,11 +154,12 @@ button[disabled] {
 }
 
 input[type="text"], input[type="number"], select, textarea {
+    height: 100%;
     color: var(--text-color);
     background-color: var(--background-third-color);
     border: none;
-    padding: var(--medium-gap) var(--large-gap);
-    border-radius: var(--medium-gap);
+    padding: var(--small-gap) var(--medium-gap);
+    border-radius: var(--small-gap);
     font-size: inherit;
     font-family: inherit;
     line-height: inherit;

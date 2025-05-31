@@ -3,12 +3,15 @@
     import type { WithId } from 'mongodb';
 
     import t from '$lib/i18n/i18n.svelte';
+    import type { Box } from '$lib/types/box';
     import type { DbMove } from '$lib/types/mongo/move';
     import type { Ailment } from '$lib/constants/ailments';
     import type { DbPartnerPokemon, DbPokemon } from '$lib/types/mongo/pokemon';
+    import { applyMigrationsToBoxes, applyMigrationsToPokemon } from '$lib/functions/migrations';
     import { DEFAULT_PICTURE_URL, SHINY_PICTURE_URL, SPRITE_PICTURE_URL } from '$lib/constants/urls';
 
     import BoxesList from '$lib/components/lodestones/BoxesList.svelte';
+    import BoxesManagerForm from '$lib/components/forms/BoxesManagerForm.svelte';
     import PkmnIdentitySocials from '$lib/components/PkmnIdentity&Socials.svelte';
     import EvolvePokemonForm from '$lib/components/forms/EvolvePokemonForm.svelte';
     import ImportPokemonForm from '$lib/components/forms/ImportPokemonForm.svelte';
@@ -16,9 +19,6 @@
     import PkmnAttributesSkills from '$lib/components/PkmnAttributes&Skills.svelte';
     import RetrainPokemonForm from '$lib/components/forms/RetrainPokemonForm.svelte';
     import ReleasePokemonForm from '$lib/components/forms/ReleasePokemonForm.svelte';
-    import { applyMigrationsToBoxes, applyMigrationsToPokemon } from '$lib/functions/migrations';
-    import BoxesManagerForm from '$lib/components/forms/BoxesManagerForm.svelte';
-    import type { Box } from '$lib/types/box';
 
     let isSaving: boolean = $state(false);
     let debounceTimeout: NodeJS.Timeout | null = null;
@@ -62,7 +62,7 @@
             localStorage.setItem('team', JSON.stringify(pokemons));
             isSaving = false;
         }, 1000);
-    }
+    };
 
     const savePokemon = () => {
         if (pokemon === null) return;
@@ -71,7 +71,7 @@
         pokemons[index] = pokemon;
 
         savePokemons();
-    };    
+    };
 
     const releasePokemon = () => {
         if (pokemon === null) return;
@@ -156,16 +156,16 @@
 
     const updatePokemonList = (pkmns: WithId<DbPartnerPokemon>[]) => {
         if (!pkmns && !pokemon) return;
-        
+
         pokemons = pkmns;
 
-        const hasIdChange = pkmns.find(p => p.id === pokemon.id)?.box !== pokemon?.box;
+        const hasIdChange = pkmns.find((p) => p.id === pokemon.id)?.box !== pokemon?.box;
         if (hasIdChange) {
             setPokemon(pokemons[0]);
         }
 
         savePokemons();
-    }
+    };
 
     const importPokemon = (pkmn: WithId<DbPartnerPokemon>) => {
         if (!pkmn) return;
@@ -191,7 +191,7 @@
 
         box = boxes[index];
         setPokemon(pokemonInBox[0] || null);
-    }
+    };
 
     const updateBoxes = (newBoxes: Box[]) => {
         if (!newBoxes) return;
@@ -199,9 +199,9 @@
         const ids = newBoxes.map((b) => b.id);
 
         boxes = newBoxes;
-        pokemons = pokemons.map(pkmn => ({
+        pokemons = pokemons.map((pkmn) => ({
             ...pkmn,
-            box: ids.includes(pkmn.box) ? pkmn.box : 0
+            box: ids.includes(pkmn.box) ? pkmn.box : 0,
         }));
 
         isSaving = true;
@@ -214,18 +214,24 @@
         }, 1000);
     };
 
-    const onPokemonDragStartHandle = (event: DragEvent & { currentTarget: EventTarget & HTMLButtonElement }, pkmn: WithId<DbPartnerPokemon>) => {
+    const onPokemonDragStartHandle = (
+        event: DragEvent & { currentTarget: EventTarget & HTMLButtonElement },
+        pkmn: WithId<DbPartnerPokemon>,
+    ) => {
         if (!event.dataTransfer) return;
 
-        event.dataTransfer.setData("text/plain", pkmn.id);
-        event.dataTransfer.dropEffect = "move";
-        event.currentTarget.style.opacity = "0.5";
+        event.dataTransfer.setData('text/plain', pkmn.id);
+        event.dataTransfer.dropEffect = 'move';
+        event.currentTarget.style.opacity = '0.5';
     };
 
-    const onPokemonDragEndHandle = (event: DragEvent & { currentTarget: EventTarget & HTMLButtonElement }, pkmn: WithId<DbPartnerPokemon>) => {
+    const onPokemonDragEndHandle = (
+        event: DragEvent & { currentTarget: EventTarget & HTMLButtonElement },
+        pkmn: WithId<DbPartnerPokemon>,
+    ) => {
         if (!event.dataTransfer) return;
 
-        event.currentTarget.style.opacity = "1";
+        event.currentTarget.style.opacity = '1';
     };
 
     onMount(async () => {
@@ -249,27 +255,27 @@
 </script>
 
 <section class="homepage">
-    {#if box !== null}
-        <pkmn-list class="wrapper" data-title={box.name}>
+    <pkmn-list class="wrapper" data-title={box?.name}>
+        {#if box !== null}
             {#if pokemonInBox.length === 0}
                 <p>{t('home.pokemon.error-no-team')}</p>
             {/if}
             {#each pokemonInBox as pkmn}
                 <button
                     draggable="true"
+                    class="partner secondary"
+                    class:selected={pkmn === pokemon}
+                    onclick={() => setPokemon(pkmn)}
                     ondragstart={(event) => onPokemonDragStartHandle(event, pkmn)}
                     ondragend={(event) => onPokemonDragEndHandle(event, pkmn)}
-                    class="partner secondary"
-                    onclick={() => setPokemon(pkmn)}
-                    class:selected={pkmn === pokemon}
                     style:--url="url('{SPRITE_PICTURE_URL}{pkmn.specie[1]}.png')"
                 >
                     {pkmn.nickname}
                 </button>
             {/each}
             <BoxesList {boxes} {pokemons} {updatePokemonList} {setCurrentBox}></BoxesList>
-        </pkmn-list>
-    {/if}
+        {/if}
+    </pkmn-list>
     <pkmn-list-actions class="wrapper" data-title={t('home.pokemon.title-actions')}>
         <button onclick={() => (showManageBoxesDialog = true)}>{t('home.pokemon.action-boxes')}</button>
         <button onclick={() => (showImportDialog = true)}>{t('home.pokemon.action-import')}</button>

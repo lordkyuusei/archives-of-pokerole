@@ -42,7 +42,7 @@
         }
 
         q.description {
-            max-height: 15svh;
+            max-height: 10svh;
             overflow: auto;
             text-align: justify;
             padding: var(--medium-gap);

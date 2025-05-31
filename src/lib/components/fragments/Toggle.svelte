@@ -1,14 +1,17 @@
 <script lang="ts">
     type Props = {
+        name?: string;
         toggled: boolean;
         onToggle?: (value: boolean) => void;
     };
 
-    let { toggled = $bindable(false), onToggle = () => {} }: Props = $props();
+    let { toggled = $bindable(false), name = 'default', onToggle = () => {} }: Props = $props();
 </script>
 
 <toggle>
     <input
+        id={name}
+        {name}
         class="switch"
         type="checkbox"
         bind:checked={toggled}
@@ -25,10 +28,10 @@
 
         width: 3rem;
         aspect-ratio: 2 / 1;
-        padding: var(--smaller-gap);
-        background-color: var(--background-third-color);
-        border-radius: var(--medium-gap);
         overflow: hidden;
+        padding: var(--smaller-gap);
+        border-radius: var(--medium-gap);
+        background-color: var(--background-third-color);
 
         &::before,
         & > input {
@@ -54,8 +57,14 @@
             transition: margin-left var(--transition-duration) var(--transition-function);
         }
 
-        &:has(> input:checked)::before {
-            margin-left: calc(50% - 0.5px);
+        &:has(> input:checked) {
+            background-color: var(--accent-color);
+
+            &::before {
+                margin-left: calc(50% - 0.5px);
+                border: var(--smaller-gap) solid var(--background-color);
+                background-color: var(--text-color);
+            }
         }
     }
 </style>

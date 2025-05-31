@@ -20,6 +20,11 @@
     let show: boolean = $state(false);
     let currentPokemonList: WithId<DbPartnerPokemon>[] = $derived(pokemons);
 
+    const changeBox = (boxId: number) => {
+        setCurrentBox(boxId);
+        show = !show;
+    }
+
     const onDragStartElementHandle = (event: DragEvent & { currentTarget: HTMLImageElement }, pkmn: WithId<DbPartnerPokemon>, box: Box) => {
         if (!event.dataTransfer) return;
 
@@ -59,7 +64,7 @@
 </script>
 
 <boxes-list role="tree">
-    <button onclick={() => (show = !show)}>↕️</button>
+    <button title={t('boxes.form.title-box')} onclick={() => (show = !show)}><span>_</span></button>
     <ul class="wrapper boxes-list" data-title={t('home.boxes.title-box')} class:show>
         {#each boxes as box, i (box.id)}
             {@const pokemonInBox = currentPokemonList.filter((p) => p.box === box.id)}
@@ -71,7 +76,7 @@
                 ondragleave={(event) => onDragLeaveElementHandle(event)}
                 ondrop={(event) => onDropElementHandle(event, box)}
             >
-                <button title={box.name} onclick={() => setCurrentBox(box.id)}>{box.name}</button>
+                <button title={box.name} onclick={() => changeBox(box.id)}>{box.name}</button>
                 {#each Array.from({ length: i === 0 ? MAX_POKEMON_PREVIEW : MAX_POKEMON_PREVIEW - 1 }) as _, index}
                     {#if pokemonInBox[index]}
                         <img
@@ -97,18 +102,50 @@
         margin-left: auto;
 
         height: 100%;
-        border: 4px solid rebeccapurple;
         border-radius: 0.5rem;
         display: flex;
         justify-content: center;
         align-items: center;
 
         & > button {
-            all: unset;
-            appearance: none;
+            position: relative;
+            border-radius: var(--medium-gap);
 
             &:hover {
                 cursor: pointer;
+            }
+
+            &::before, &::after, & > span::before, & > span::after {
+                content: "";
+                position: absolute;
+                height: 30%;
+                border-radius: var(--small-gap);
+                border: var(--smaller-gap) solid var(--text-color);
+                background: var(--background-fourth-color);
+            }
+
+            &::before {
+                width: 50%;
+                top: var(--small-gap);
+                left: var(--small-gap);
+            }
+
+            &::after {
+                width: 25%;
+                bottom: var(--small-gap);
+                left: var(--small-gap);
+            }
+
+            & > span::before {
+                width: 25%;
+                top: var(--small-gap);
+                right: var(--small-gap);
+            }
+
+            & > span::after {
+                width: 50%;
+                bottom: var(--small-gap);
+                right: var(--small-gap);
             }
         }
 

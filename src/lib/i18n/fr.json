@@ -84,6 +84,8 @@
     "home.character.identity": "Identité",
     "home.character.moveset": "Set d'attaques",
     "home.layout.action-me": "Mon personnage",
+    "home.layout.action-generator": "Générateur",
+    "home.layout.action-pokemon": "Mes Pokémon",
     "home.layout.action-search": "Rechercher",
     "home.layout.placeholder-search": "Rechercher un pokémon, une capacité, un talent...",
     "home.pokemon.action-boxes": "Gérer les Boîtes Pokémon",

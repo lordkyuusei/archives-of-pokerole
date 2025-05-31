@@ -41,12 +41,32 @@
 </script>
 
 <header class="wrapper">
-    <a href="/">
-        <img src="/logo.png" alt="logo" height="50" />
-    </a>
-    <button class="primary" onclick={() => (isOpen = !isOpen)}>🔍 {t('home.layout.action-search')}</button>
-    <a href="/me"><button class="primary">👤 {t('home.layout.action-me')}</button></a>
-    <LangSwitcher></LangSwitcher>
+    <nav>
+        <li>
+            <a href="/">
+                <img src="/logo.png" alt="logo" height="50" />
+            </a>
+        </li>
+        <li></li>
+        <li>
+            <a href="/"><button class="primary">🔴 {t('home.layout.action-pokemon')}</button></a>
+        </li>
+        <li>
+            <a href="/me"><button class="primary">👤 {t('home.layout.action-me')}</button></a>
+        </li>
+        <li>
+            <a href="/generator"><button class="primary">🎰 {t('home.layout.action-generator')}</button></a>
+        </li>
+    </nav>
+    <span></span>
+    <nav>
+        <li>
+            <button class="primary" onclick={() => (isOpen = !isOpen)}>🔍 {t('home.layout.action-search')}</button>
+        </li>
+        <li>
+            <LangSwitcher></LangSwitcher>
+        </li>
+    </nav>
 </header>
 
 <main>
@@ -79,9 +99,16 @@
         grid-area: 1 / 1 / 1 / -1;
 
         display: grid;
-        grid-template-columns: 1fr auto auto auto;
+        grid-template-columns: auto 1fr auto;
         align-items: center;
         gap: var(--large-gap);
+        padding-inline: var(--large-gap);
+
+        & > nav {
+            display: flex;
+            align-items: center;
+            gap: var(--large-gap);
+        }
     }
 
     main {
@@ -102,9 +129,13 @@
 
         & > input {
             width: 100%;
-            padding: var(--small-gap);
-            border-radius: var(--large-gap);
+            color: var(--text-color);
             margin-bottom: var(--large-gap);
+
+            &::placeholder {
+                color: var(--text-color);
+                opacity: 0.5;
+            }
         }
 
         & > ul {

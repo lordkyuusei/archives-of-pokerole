@@ -91,6 +91,8 @@
                         font-size: small;
                         border-radius: var(--large-gap);
                         padding-inline: var(--medium-gap);
+                        color: var(--background-color);
+                        background-color: var(--tough);
                     }
                 }
             }
