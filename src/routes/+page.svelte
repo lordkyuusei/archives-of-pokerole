@@ -424,4 +424,28 @@
             background-blend-mode: hard-light;
         }
     }
+
+    @media (max-width: 1280px) {
+        section.homepage {
+            grid-template:
+                'pkmn-list pkmn-list-actions' auto
+                'pkmn-selected-actions pkmn-selected-actions' auto
+                'pkmn-selected pkmn-selected' 1fr / 1fr auto;
+
+            & > pkmn-actions {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                
+                & > pkmn-infos {
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                }
+                
+                & > pkmn-updates {
+                    flex-direction: row;
+                    gap: var(--medium-gap);
+                }
+            }
+        }
+    }
 </style>
