@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import type { ObjectId, WithId } from 'mongodb';
+    import type { AutoEncryptionLoggerLevel, ObjectId, WithId } from 'mongodb';
 
     import t from "$lib/i18n/i18n.svelte";
     import type { DbMove } from '$lib/types/mongo/move';
@@ -60,10 +60,14 @@
     let skillSettingIndex = $state(0);
     let skillSettings: [number, number][] = $derived(
         rankUpSettingList.map((setting, i) => {
-            const previousSkillPoints = rankUpSettingList[i - 1]?.config.skillPoints || 0;
+            const previousSkillPoints = Array.from({ length: i }).reduce((acc: number, _, j) => {
+                return acc + (rankUpSettingList[j]?.config.skillPoints || 0);
+            }, 0);
             return [setting.config.skillPoints + previousSkillPoints, setting.config.skillLimit];
         }),
     );
+
+    $inspect(skillSettings);
     let currentSkillSetting: [number, number] = $derived(skillSettings[skillSettingIndex]);
 
     let insightIndex: number = $derived(attributes.findIndex((attr) => attr.stat === 'Insight'));
@@ -82,12 +86,6 @@
             skillSettingIndex += 1;
         }
     });
-
-    const listenForEscape = (key: string) => {
-        if (key === 'Escape') {
-            isOpen = false;
-        }
-    };
 
     let submit = () => {
         const updatedPokemon = { ...pkmn };
@@ -228,6 +226,7 @@
         display: grid;
         grid-template-rows: auto 1fr;
         gap: var(--medium-gap);
+        overflow-x: auto;
 
         & > ul.tabs {
             display: grid;
@@ -245,6 +244,10 @@
                     background-color: var(--background-fourth-color);
                 }
             }
+        }
+
+        & > :nth-child(2) {
+            overflow: auto;
         }
     }
 </style>
