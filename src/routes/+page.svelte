@@ -178,7 +178,7 @@
     const exportPokemon = () => {
         if (!pokemon) return;
 
-        const { id, ...pokemonData } = pokemon;
+        const { id, box, ...pokemonData } = pokemon;
         const data = JSON.stringify(pokemonData);
         navigator.clipboard.writeText(data).then(() => {
             alert(pokemonData.nickname + ' copié dans le presse-papiers.');

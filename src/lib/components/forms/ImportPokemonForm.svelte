@@ -17,6 +17,7 @@
     let submit = () => {
         const newPokemon = JSON.parse(importText) as WithId<DbPartnerPokemon>;
         newPokemon.id = crypto.randomUUID();
+        newPokemon.box = 0;
         importPokemon(newPokemon);
         isOpen = false;
     };
