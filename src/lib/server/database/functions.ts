@@ -82,7 +82,7 @@ export const searchDatabaseMult = async (searchText: string) => {
     const species = await findMultInDatabase(speciesList, "Pokedex") as unknown as WithId<DbPokemon>[];
 
     const movesList = [...new Set(species.map(p => p.Moves).flat())];
-    const moves = await getMovesFromPokemon(movesList);
+    const moves = await getAllMovesFromDb();
 
     return { species, moves };
 }
@@ -114,6 +114,9 @@ export const getNaturesFromDb = async () =>
 
 export const getAllPokemonFromDb = async () =>
     await mongo.collection<DbPokemon>("Pokedex").find({ DexID: { $not: /[(FM)]/ } }, { projection: { _id: 1, Name: 1, Number: 1, DexID: 1 } }).sort({ DexID: 1 }).toArray();
+
+export const getAllMovesFromDb = async () =>
+    await mongo.collection<DbPokemon>("Moves").find().sort().toArray();
 
 export const getPokemonFromDb = async (pokemon: string) =>
     await mongo.collection<DbPokemon>("Pokedex").findOne({ _id: pokemon });
