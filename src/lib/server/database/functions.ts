@@ -1,31 +1,65 @@
 import type { WithId } from "mongodb";
-import { mongo } from "./mongodb";
+import { mongo, mongoDex } from "./mongodb";
 import type { DbMove } from "$lib/types/mongo/move";
 import type { DbNature } from "$lib/types/mongo/nature";
 import type { DbAbility } from "$lib/types/mongo/ability";
 import { type DbPokemon, type DbPokemonMove } from "$lib/types/mongo/pokemon";
 
+const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTranslations: any[]) => {
+    const getFrenchMegaWord = (id: number) => {
+        return [382, 383].includes(id) ? 'Primo-' : 'Méga-';
+    }
+
+    const getFrenchFormWord = (pkmn: DbPokemon) => {
+        const parenthesisIndex = pkmn.Name.indexOf('(');
+        const spaceIndex = pkmn.Name.indexOf('Form', parenthesisIndex);
+        return pkmn.Name.substring(parenthesisIndex + 1, spaceIndex - 1);
+    }
+
+
+    return pokemonList.map((pokemon) => {
+        const match = pokemonListWithTranslations.find(dex => dex.id === pokemon.Number);
+        if (!match) {
+            console.log(`No match found for Pokemon Number ${pokemon.Number}`);
+            return { pokemon, I18n: { fr: '???', en: pokemon.Name } };
+        }
+        else {
+            const frTranslation =
+                pokemon.DexID.includes('M') ? `${getFrenchMegaWord(pokemon.Number)}${match.i18n.fr}` :
+                    pokemon.DexID.includes('F') ? `${match.i18n.fr} (Forme ${getFrenchFormWord(pokemon)})` :
+                        pokemon.DexID.includes('A') ? `${match.i18n.fr} d'Alola'` :
+                            pokemon.DexID.includes('G') ? `${match.i18n.fr} de Galar` :
+                                pokemon.DexID.includes('H') ? `${match.i18n.fr} de Hisui` : match.i18n.fr;
+
+            const enTranslation = pokemon.Name;
+
+            return {
+                ...pokemon,
+                I18n: {
+                    fr: frTranslation,
+                    en: enTranslation
+                }
+            }
+        }
+    })
+}
+
 export const generatePokemon = async (types: string[], ranks: string[], isEvolved: boolean, isStarter: boolean): Promise<DbPokemon[]> => {
-    // Step 1: Query the database for Pokémon matching the types
     const query: any = {
         $or: [{ Type1: { $in: types } }, { Type2: { $in: types } }],
     };
 
-    // Step 2: Add conditions for evolution if isEvolved is true
     if (isEvolved) {
         query["Evolutions.From"] = { $exists: true };
     }
 
-    // Step 3: Add condition for starter Pokémon if isStarted is true
     if (isStarter) {
         query.GoodStarter = true;
     }
 
-    // Step 4: Fetch matching Pokémon from the database
     const collection = mongo.collection<DbPokemon>("Pokedex");
     const matchingPokemon = await collection.find(query).toArray();
 
-    // Step 5: Randomly shuffle the results and return up to 10 Pokémon
     const shuffledPokemon = matchingPokemon.sort(() => Math.random() - 0.5);
     return shuffledPokemon.slice(0, 10);
 }
@@ -58,7 +92,13 @@ export const findInDatabase = async (searchText: string) => {
 
     const results = collections.map(async (collection) => {
         const { name } = collection;
-        const collectionData = await mongo.collection(name).find({ "Name": { $regex: searchText, $options: "i" } }).toArray();
+        const collectionData = await mongo.collection(name).find({
+            $or: [
+                { "Name": { $regex: searchText, $options: "i" } },
+                { "I18n.fr": { $regex: searchText, $options: "i" } },
+                { "I18n.en": { $regex: searchText, $options: "i" } }
+            ]
+        }).toArray();
         return { name, results: collectionData };
     });
 

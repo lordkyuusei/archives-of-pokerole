@@ -246,6 +246,7 @@
         const json = await data.json();
 
         moves = json.moves;
+        console.log(moves);
         species = json.species;
 
         if (pokemons.length > 0) {

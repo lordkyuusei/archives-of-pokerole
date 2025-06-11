@@ -39,6 +39,7 @@ export type DbPokemon = {
     "Evolutions": DbPokemonEvolution[],
     "Image": string,
     "Moves": WithId<DbPokemonMove>[],
+    "I18n": I18N;
 }
 
 export type DbPartnerPokemon = {
@@ -88,4 +89,9 @@ export type DbPokemonEvolution = {
 export type DbPokemonMove = {
     "Learned": DbPokemonRank,
     "Name": string,
+}
+
+export type I18N = {
+    "fr": string,
+    "en": string,
 }

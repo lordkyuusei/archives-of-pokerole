@@ -2,6 +2,7 @@
     import { setContext } from 'svelte';
     import { slide } from 'svelte/transition';
 
+    import { dev } from '$app/environment';
     import t from '$lib/i18n/i18n.svelte';
 
     import ItemListResult from '$lib/components/ItemListResult.svelte';
@@ -57,6 +58,11 @@
         <li>
             <a href="/generator"><button class="primary">🎰 {t('home.layout.action-generator')}</button></a>
         </li>
+        {#if dev}
+            <a href="/admin">
+                <button class="primary">⚙️ {t('home.layout.action-admin')}</button>
+            </a>
+        {/if}
     </nav>
     <span></span>
     <nav>
