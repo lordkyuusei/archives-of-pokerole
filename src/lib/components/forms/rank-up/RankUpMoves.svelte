@@ -42,6 +42,8 @@
         }
         return true;
     };
+
+    $inspect(learnableMoves)
 </script>
 
 <rank-up-moveset>

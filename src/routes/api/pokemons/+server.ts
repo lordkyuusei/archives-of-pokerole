@@ -3,10 +3,11 @@ import { searchDatabaseMult } from "$lib/server/database/functions";
 import { json, type RequestHandler } from "@sveltejs/kit"
 
 export const GET: RequestHandler = async ({ url }) => {
-    const searchText = url.searchParams.get('species');
-    if (!searchText) return json([]);
+    const pokemonSearchText = url.searchParams.get('species');
+    const movesSearchText = url.searchParams.get('moves');
+    if (!pokemonSearchText || !movesSearchText) return json([]);
 
-    const { species, moves } = await searchDatabaseMult(searchText);
+    const { species, moves } = await searchDatabaseMult(pokemonSearchText, movesSearchText);
 
     const movesList = species.map(x => x.Moves).flat();
 

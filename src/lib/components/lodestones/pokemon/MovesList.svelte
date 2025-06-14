@@ -12,12 +12,13 @@
     type Props = {
         pokemon: DbPokemon;
         moves: WithId<DbMove>[];
+        learnedMoves?: ObjectId[];
         onMoveSelection?: null | ((move: WithId<DbMove>) => boolean);
     };
 
-    let { pokemon, moves, onMoveSelection = null }: Props = $props();
+    let { pokemon, moves, learnedMoves = [], onMoveSelection = null }: Props = $props();
 
-    let selectedMoves: ObjectId[] = $state([]);
+    let selectedMoves: ObjectId[] = $state(learnedMoves);
 
     const getDamage = (move: WithId<DbMove>) => {
         if (move['Power'] === 0) return '-';
@@ -39,7 +40,7 @@
         const damage = getDamage(move);
 
         const moveFromPokemon = pokemon.Moves.find((x) => x.Name === move.Name);
-        if (!moveFromPokemon) return { id, icon, typeColor, damage, rankIcon: 'Starter' };
+        if (!moveFromPokemon) return { id, icon, typeColor, damage, rankIcon: 'ability.svg' };
 
         const rankIcon = getIconFromRank(moveFromPokemon?.Learned);
         return { id, icon, typeColor, damage, rankIcon };

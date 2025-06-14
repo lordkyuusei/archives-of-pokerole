@@ -77,6 +77,7 @@
     "form.trainer.starting-money": "Argent de départ",
     "form.trainer.title-add": "Créer un dresseur",
     "form.training.new-moveset": "Capacités à apprendre : ",
+    "form.training.error-new-moveset": "Votre Pokémon ne peut apprendre aucune capacité. Vérifiez:\n- qu'il dispose de suffisamment d'Insight vis-à-vis du nombre d'attaques déjà apprises,\n- que son nouveau rang lui octroie bien de nouvelles attaques.",
     "form.training.remaining-points": "Points restants : ",
     "form.training.summary": "Résumé",
     "home.boxes.title-box": "Boîtes Pokémon",

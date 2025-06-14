@@ -77,12 +77,19 @@ export const searchDatabase = async (searchText: string) => {
     return await Promise.resolve([]);
 }
 
-export const searchDatabaseMult = async (searchText: string) => {
-    const speciesList = searchText.split(',');
-    const species = await findMultInDatabase(speciesList, "Pokedex") as unknown as WithId<DbPokemon>[];
+export const searchDatabaseMult = async (pokemonSearchText: string, movesSearchText: string) => {
+    const speciesList = pokemonSearchText.split(',');
+    const movesList = movesSearchText.split(',');
 
-    const movesList = [...new Set(species.map(p => p.Moves).flat())];
-    const moves = await getAllMovesFromDb();
+    const species = await findMultInDatabase(speciesList, "Pokedex") as unknown as WithId<DbPokemon>[];
+    const knownMoves = await findMultInDatabase(movesList, "Moves") as unknown as WithId<DbMove>[];
+
+    const allMoves = [...new Set([
+        ...species.flatMap(p => p.Moves.map(m => m.Name)),
+        ...knownMoves.flatMap(m => m.Name)
+    ])];
+
+    const moves = await getMovesFromPokemon(allMoves);
 
     return { species, moves };
 }
@@ -127,8 +134,8 @@ export const getMoveFromDb = async (move: string) =>
 export const getLearnersFromDb = async (move: DbMove) =>
     await mongo.collection<DbPokemon>("Pokedex").find({ "Moves.Name": move.Name }).toArray();
 
-export const getMovesFromPokemon = async (moves: DbPokemonMove[]) =>
-    await mongo.collection<DbMove>("Moves").find({ "Name": { $in: moves.map(m => m.Name) } }).toArray();
+export const getMovesFromPokemon = async (moves: string[]) =>
+    await mongo.collection<DbMove>("Moves").find({ "Name": { $in: moves } }).toArray();
 
 export const getAbilityFromDb = async (ability: string) =>
     await mongo.collection<DbAbility>("Abilities").findOne({ "_id": ability });

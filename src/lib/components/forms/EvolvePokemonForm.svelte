@@ -2,14 +2,19 @@
     import { onMount } from 'svelte';
     import type { ObjectId, WithId } from 'mongodb';
 
-    import t from "$lib/i18n/i18n.svelte";
+    import t from '$lib/i18n/i18n.svelte';
     import type { DbMove } from '$lib/types/mongo/move';
     import type { RankUpSetting } from '$lib/types/rank';
     import type { PokemonSkill } from '$lib/constants/skills';
     import { getIdFromName } from '$lib/functions/getIdFromName';
     import { rankUpSettings } from '$lib/constants/rankUpConfigs';
     import { getLearnableMovesData } from '$lib/functions/getLearnableMoves';
-    import type { DbPartnerPokemon, DbPokemon, DbPokemonAttribute, DbPokemonSocial } from '$lib/types/mongo/pokemon';
+    import type {
+        DbPartnerPokemon,
+        DbPokemon,
+        DbPokemonAttribute,
+        DbPokemonSocial,
+    } from '$lib/types/mongo/pokemon';
 
     import Dialog from '../fragments/Dialog.svelte';
     import RankUpMoves from './rank-up/RankUpMoves.svelte';
@@ -18,6 +23,7 @@
     import RankUpSocials from './rank-up/RankUpSocials.svelte';
     import EvolutionConditions from './EvolutionConditions.svelte';
     import RankUpAttributes from './rank-up/RankUpAttributes.svelte';
+    import type { SpeciesAndMoves } from '$lib/types/api/pokemons';
 
     type Props = {
         pokemon: WithId<DbPartnerPokemon>;
@@ -65,7 +71,9 @@
     let skillSettingIndex = $state(0);
     let skillSettings: [number, number][] = $derived(
         rankUpSettingList.map((setting, i) => {
-            const previousSkillPoints = rankUpSettingList[i - 1]?.config.skillPoints || 0;
+            const previousSkillPoints = Array.from({ length: i }).reduce((acc: number, _, j) => {
+                return acc + (rankUpSettingList[j]?.config.skillPoints || 0);
+            }, 0);
             return [setting.config.skillPoints + previousSkillPoints, setting.config.skillLimit];
         }),
     );
@@ -75,10 +83,18 @@
     let insightIncrease: number = $derived(attributes[insightIndex].values[2]);
 
     let learnedMoves: ObjectId[] = $state([]);
+    let allLearnableMoves: WithId<DbMove>[] = $state([]);
     let learnableMoves: WithId<DbMove>[] = $state([]);
     let learnableAmount: number = $derived(currentSpecie['Insight'] + insightIncrease + 2 - learnedMoves.length);
 
-    let tabs: string[] = ['evolution.conditions', 'character.attributes', 'pokemon.moveset', 'character.socials', 'character.skills', 'character.summary'];
+    let tabs: string[] = [
+        'evolution.conditions',
+        'character.attributes',
+        'pokemon.moveset',
+        'character.socials',
+        'character.skills',
+        'character.summary',
+    ];
     let currentTab: string = $state(tabs[0]);
 
     $effect(() => {
@@ -91,11 +107,36 @@
     const startEvolution = (newSpecie: WithId<DbPokemon>) => {
         currentSpecie = newSpecie;
 
-        (attributes = Object.entries(pkmn.attributes).map(([stat, _]) => ({
+        const currentSpecieLearnableMoves = getLearnableMovesData(
+            allLearnableMoves,
+            specie.Moves,
+            rankUpSettingList.at(-1)?.to,
+            pkmn.moves,
+        );
+
+        const evolutionLearnableMoves = getLearnableMovesData(
+            allLearnableMoves,
+            currentSpecie.Moves,
+            rankUpSettingList.at(-1)?.to,
+        );
+
+        const uniqueMovesNames = new Set([
+            ...currentSpecieLearnableMoves.map((m) => m.Name),
+            ...evolutionLearnableMoves.map((m) => m.Name),
+        ]);
+
+        const uniqueMoves = new Set(
+            [...currentSpecieLearnableMoves, ...evolutionLearnableMoves].filter((move) =>
+                uniqueMovesNames.has(move.Name),
+            ),
+        );
+
+        learnableMoves = [...uniqueMoves];
+        attributes = Object.entries(pkmn.attributes).map(([stat, _]) => ({
             stat: stat as DbPokemonAttribute,
             values: [currentSpecie[stat], currentSpecie[`Max${stat}`], 0],
-        }))),
-            (currentTab = 'character.attributes');
+        }));
+        currentTab = 'character.attributes';
     };
 
     let submit = () => {
@@ -123,24 +164,21 @@
     };
 
     onMount(async () => {
-        const evolvedSpecies = specie['Evolutions'].filter((e) => e['To']).map((e) => getIdFromName(e['To']));
-        if (evolvedSpecies.length === 0) return;
+        const currentRankSettingIndex = rankUpSettings.findIndex((conf) => conf.from === pkmn.rank);
+        const evolvable = specie['Evolutions'].filter((e) => e['To']).map((e) => getIdFromName(e['To']));
+        if (evolvable.length === 0) return;
 
-        const evolutionSpecieAsync = await fetch(`/api/pokemons?species=${evolvedSpecies.join(',')}`);
-        const { species } = await evolutionSpecieAsync.json();
+        const evolvableData = await fetch(`/api/pokemons?species=${evolvable.join(',')}&moves=${pkmn.moves.join(',')}`);
+        const { species, moves: specieLearnableMoves }: SpeciesAndMoves = await evolvableData.json();
 
         evolutionSpecies = species;
-
-        const possibleMoveset = [...specie['Moves'], ...evolutionSpecies.flatMap((x) => x['Moves'])];
-
-        const currentRankSettingIndex = rankUpSettings.findIndex((conf) => conf.from === pkmn.rank);
         rankUpSettingList = rankUpSettings.slice(0, currentRankSettingIndex);
-        learnableMoves = getLearnableMovesData(moves, possibleMoveset, rankUpSettingList.at(-1).to);
+        allLearnableMoves = specieLearnableMoves;
     });
 </script>
 
-<Dialog bind:isOpen title="{t('evolution.condition.to')} {specie.Evolutions[0].To}">
-    <h1>{t('evolution.condition.to')} {specie.Evolutions[0].To}</h1>
+<Dialog bind:isOpen title="{t('evolution.condition.to')} ... ?">
+    <h1>{t('evolution.condition.to')} ... ?</h1>
     <form>
         <ul class="tabs">
             {#each tabs as tab}
@@ -150,7 +188,11 @@
         {#if currentTab === 'evolution.conditions'}
             <EvolutionConditions species={evolutionSpecies} onNextTab={startEvolution}></EvolutionConditions>
         {:else if currentTab === 'character.attributes'}
-            <RankUpAttributes {stat} bind:attributes onNextTab={() => (currentTab = 'pokemon.moveset')} {attributePoints}
+            <RankUpAttributes
+                {stat}
+                bind:attributes
+                onNextTab={() => (currentTab = 'pokemon.moveset')}
+                {attributePoints}
             ></RankUpAttributes>
         {:else if currentTab === 'pokemon.moveset'}
             <RankUpMoves
@@ -250,6 +292,7 @@
         display: grid;
         grid-template-rows: auto 1fr;
         gap: var(--medium-gap);
+        overflow-x: auto;
 
         & > ul.tabs {
             display: grid;

@@ -18,7 +18,9 @@ export const getLearnableMovesData = (allMoves: WithId<DbMove>[], pkmnMoves: Wit
         const id = move["_id"].toString();
         const moveIndex = learnableMoves.findIndex(pkmnMove => getIdFromName(pkmnMove["Name"]) === id);
         const learnedIndex = knownMoves.findIndex(knownMove => knownMove === id);
-        return moveIndex !== -1 && learnedIndex === -1;
+
+        return knownMoves.length ? (moveIndex !== -1 || learnedIndex !== -1) : moveIndex !== -1;
     });
+
     return learnableMovesData.toSorted((a, z) => a["Name"].localeCompare(z["Name"]));
 }

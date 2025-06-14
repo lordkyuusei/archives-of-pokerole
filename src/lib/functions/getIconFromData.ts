@@ -3,12 +3,14 @@ import type { DbPokemonRank } from "$lib/types/mongo/pokemon";
 
 export const getIconFromRank = (rank: DbPokemonRank) => {
     const rankIcon: { [x in DbPokemonRank]: string } = {
+        "None": "",
         "Starter": "honorball.svg",
         "Beginner": "pokeball.svg",
         "Amateur": "superball.svg",
         "Ace": "hyperball.svg",
         "Pro": "memoryball.svg",
         "Master": "masterball.svg",
+        "Champion": "",
     }
 
     return rankIcon[rank];

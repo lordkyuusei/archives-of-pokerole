@@ -40,7 +40,6 @@
     );
 
     const switchState = (index: number, status: number) => {
-        console.log(status);
         if (status === PokemonStudyState.NeverMet) {
             pokedexBits = setPokemonStatus(pokedexBits, index, PokemonStudyState.Seen);
         } else if (status === PokemonStudyState.Seen) {

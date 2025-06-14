@@ -19,6 +19,7 @@
     import PkmnAttributesSkills from '$lib/components/PkmnAttributes&Skills.svelte';
     import RetrainPokemonForm from '$lib/components/forms/RetrainPokemonForm.svelte';
     import ReleasePokemonForm from '$lib/components/forms/ReleasePokemonForm.svelte';
+    import LearnPokemonMoveForm from '$lib/components/forms/LearnPokemonMoveForm.svelte';
 
     let isSaving: boolean = $state(false);
     let debounceTimeout: NodeJS.Timeout | null = null;
@@ -40,6 +41,7 @@
     let showImportDialog: boolean = $state(false);
     let showRetrainDialog: boolean = $state(false);
     let showReleaseDialog: boolean = $state(false);
+    let showLearnMoveDialog: boolean = $state(false);
     let showManageBoxesDialog: boolean = $state(false);
 
     const setPokemon = (pkmn: WithId<DbPartnerPokemon> | null) => {
@@ -242,7 +244,9 @@
         boxes = applyMigrationsToBoxes(JSON.parse(boxesAsString ?? '[]'), t('home.pokemon.title-team'));
 
         const party = pokemons.map((pkmn) => pkmn.specie).join(',');
-        const data = await fetch('/api/pokemons?species=' + party);
+        const knownMoves = pokemons.flatMap((pkmn) => pkmn.moves).join(',');
+
+        const data = await fetch('/api/pokemons?species=' + party + '&moves=' + knownMoves);
         const json = await data.json();
 
         moves = json.moves;
@@ -313,6 +317,7 @@
                 <button onclick={() => (showRetrainDialog = true)}>{t('home.pokemon.action-retrain')}</button>
                 <button onclick={() => (showEvolveDialog = true)}>{t('home.pokemon.action-evolve')}</button>
                 <button onclick={() => (showReleaseDialog = true)}>{t('home.pokemon.action-release')}</button>
+                <button onclick={() => (showLearnMoveDialog = true)}>{t('home.pokemon.action-learn')}</button>
                 <button onclick={() => exportPokemon()}>{t('home.pokemon.action-export')}</button>
             </pkmn-updates>
         {/if}
@@ -341,6 +346,10 @@
     {#if showEvolveDialog}
         <EvolvePokemonForm bind:isOpen={showEvolveDialog} {pokemon} {specie} {moves} {updatePokemon}
         ></EvolvePokemonForm>
+    {/if}
+
+    {#if showLearnMoveDialog}
+        <LearnPokemonMoveForm bind:isOpen={showLearnMoveDialog} {pokemon} {updatePokemon}></LearnPokemonMoveForm>
     {/if}
 
     {#if showReleaseDialog}
@@ -410,8 +419,7 @@
             grid-area: pkmn-selected-actions;
         }
 
-        & > pkmn-actions,
-        & > pkmn-actions > * {
+        & > pkmn-actions {
             display: flex;
             flex-direction: column;
             gap: var(--large-gap);
@@ -422,6 +430,12 @@
             background-position: center center;
             background-size: cover;
             background-blend-mode: hard-light;
+        }
+
+        & > pkmn-actions > pkmn-updates {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
     }
 

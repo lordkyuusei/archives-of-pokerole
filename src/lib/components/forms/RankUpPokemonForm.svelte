@@ -205,6 +205,7 @@
         display: grid;
         grid-template-rows: auto 1fr;
         gap: var(--medium-gap);
+        overflow-y: auto;
 
         & > ul.tabs {
             display: grid;

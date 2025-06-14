@@ -113,7 +113,7 @@
     onMount(() => {
         const currentRankSettingIndex = rankUpSettings.findIndex((conf) => conf.from === pkmn.rank);
         rankUpSettingList = rankUpSettings.slice(0, currentRankSettingIndex);
-        learnableMoves = getLearnableMovesData(moves, specie['Moves'], rankUpSettingList.at(-1).to);
+        learnableMoves = getLearnableMovesData(moves, specie['Moves'], rankUpSettingList.at(-1).to, pkmn.moves);
     });
 </script>
 

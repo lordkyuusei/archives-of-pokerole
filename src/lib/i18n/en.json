@@ -77,6 +77,7 @@
     "form.trainer.starting-money": "Starting money",
     "form.trainer.title-add": "Create trainer",
     "form.training.new-moveset": "Remaining moves: ",
+    "form.training.error-new-moveset": "Your Pokémon can not learn any moves. Please check that:\n- it does have enough additionnal Insight regarding its moveset size,\n- its new rank effectively allows it to learn new moves.",
     "form.training.remaining-points": "Remaining points: ",
     "form.training.summary": "Summary",
     "home.boxes.title-box": "Pokémon Boxes",
