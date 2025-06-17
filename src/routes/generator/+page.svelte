@@ -17,15 +17,18 @@
     import { addPokemonToParty } from '$lib/state/pokemon.svelte';
     import type { DbPokemonRank } from '$lib/types/mongo/pokemon';
     import { goto } from '$app/navigation';
-    import { redirect } from '@sveltejs/kit';
 
     let { form, data }: PageProps = $props();
 
     let boxes = $derived(getBoxes());
     let currentLang: Lang = $derived(getLang());
 
-    let selectedNames: string[] = $state([]);
     let nbrTypesFilter: number = $state(1);
+    let selectedNames: string[] = $state([]);
+    let isAllChecked: boolean = $state(false);
+    let isRange: boolean = $state(false);
+
+    const allowedRanks = Object.keys(pokemonRankOrder).splice(1) as DbPokemonRank[];
 
     const generatePokemons = (event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) => {
         event.preventDefault();
@@ -57,7 +60,15 @@
         });
 
         goto('/', { invalidateAll: true });
-};
+    };
+
+    const toggleCheckAll = () => {
+        if (selectedNames.length === 0) {
+            selectedNames = form?.results.map((pokemon) => pokemon._id.toString()) || [];
+        } else {
+            selectedNames = [];
+        }
+    };
 </script>
 
 <pokemon-generator>
@@ -103,13 +114,22 @@
     <output class="wrapper" data-title={t('form.generator.output')}>
         {#if form?.success}
             <ul>
-                {#each form.results as pokemon}
+                <li>
+                    <span> Sprite </span>
+                    <span> N° </span>
+                    <span> Nom </span>
+                    <span> Type(s) </span>
+                    <input type="checkbox" bind:checked={isAllChecked} oninput={() => toggleCheckAll()} />
+                </li>
+                {#each form.results as pokemon, i (pokemon["_id"])}
                     <li>
                         <img class="sprite" src="{SPRITE_PICTURE_URL}{pokemon['Number']}.png" alt={pokemon['Name']} />
                         <h3>#{pokemon['Number']}</h3>
-                        <h2 title={pokemon['I18n'][currentLang]}>{pokemon['I18n'][currentLang]}</h2>
+                        <h2 title={pokemon['I18n'][currentLang]}>
+                            <a href="/pokemon/{pokemon['_id']}" target="_blank" class="link"> {pokemon['I18n'][currentLang]}</a>
+                        </h2>
                         <p>
-                            <PokemonTypes types={[pokemon['Type1'], pokemon['Type2']]}></PokemonTypes>
+                            <PokemonTypes types={[pokemon['Type1'], pokemon['Type2']]} helperPosition={i > form.results.length / 2 ? 'top' : 'bottom'}></PokemonTypes>
                         </p>
                         <input type="checkbox" bind:group={selectedNames} value={pokemon['_id'].toString()} />
                     </li>
@@ -123,15 +143,17 @@
             <div>
                 <fieldset disabled={!selectedNames.length}>
                     <legend>Rang</legend>
-                    <label for="rank-1">Entre le rang</label>
+                    <label for="rank-1">{isRange ? "Entre le rang" : "Rang"}</label>
                     <select id="rank-1" name="rank-1">
-                        {#each Object.keys(pokemonRankOrder) as rank}
+                        {#each allowedRanks as rank}
                             <option value={rank}>{rank}</option>
                         {/each}
                     </select>
+                    <label for="rank-range">Définir un intervalle</label>
+                    <Toggle name="rank-range" bind:toggled={isRange}></Toggle>
                     <label for="rank-2">Et le rang</label>
-                    <select id="rank-2" name="rank-2">
-                        {#each Object.keys(pokemonRankOrder) as rank}
+                    <select id="rank-2" name="rank-2" disabled={!isRange}>
+                        {#each allowedRanks as rank}
                             <option value={rank}>{rank}</option>
                         {/each}
                     </select>
@@ -181,7 +203,7 @@
                     grid-template-columns: 1fr 1fr;
                     grid-auto-rows: 1fr;
                     align-items: center;
-                    gap: var(--medium-gap);
+                    gap: var(--large-gap) var(--medium-gap);
 
                     padding: var(--medium-gap);
                     border-radius: var(--medium-gap);
@@ -223,6 +245,16 @@
                     padding-inline: var(--small-gap) var(--large-gap);
                     border: 1px solid var(--background-color);
                     background-color: var(--background-third-color);
+
+                    &:first-child {
+                        font-weight: bold;
+                        background-color: var(--background-fourth-color);
+                        padding-inline: var(--large-gap) var(--large-gap);
+
+                        & > input {
+                            height: var(--large-gap);
+                        }
+                    }
 
                     & > * {
                         margin: 0;
