@@ -38,7 +38,7 @@
 
         color: var(--background-color);
         background-color: var(--accent-color);
-
+        
         &.actions:not(.wrapper) {
             & > output {
                 display: grid;
@@ -52,19 +52,20 @@
             font-weight: bold;
             padding-inline: var(--small-gap);
         }
-
+        
         & > output {
             height: 100%;
             display: flex;
             align-items: center;
-
+            
             padding-inline: var(--medium-gap);
             border-radius: var(--small-gap);
-
+            
             color: var(--text-color);
             background-color: var(--background-color);
+            position: relative;
         }
-
+        
         &.large {
             color: var(--text-color);
             background-color: var(--background-color);

@@ -4,9 +4,10 @@ import type { WithId } from "mongodb";
 
 export type DbPokemonAttribute = 'Strength' | 'Dexterity' | 'Vitality' | 'Special' | 'Insight';
 export type DbPokemonSocial = 'Tough' | 'Cool' | 'Cute' | 'Beauty' | 'Clever';
-export type DbPokemonRank = 'None' | 'Starter' | 'Beginner' | 'Amateur' | 'Ace' | 'Pro' | 'Master' | 'Champion'; 
+export type DbPokemonRank = 'None' | 'Starter' | 'Beginner' | 'Amateur' | 'Ace' | 'Pro' | 'Master' | 'Champion';
 export type DbPokemonEvolutionSpeed = 'Fast' | 'Medium' | 'Slow';
 
+export type DbPokemonShort = { Name: string; DexID: string; Number: number; I18n: I18N; };
 export type DbPokemon = {
     "Number": number,
     "DexID": string,
@@ -81,9 +82,9 @@ export type DbPokemonEvolution = {
     "Kind": string,
     "Item"?: string,
     "Speed"?: DbPokemonEvolutionSpeed,
-    "Stat"? : string,
-    "Value"? : number,
-    "Special"? : string,
+    "Stat"?: string,
+    "Value"?: number,
+    "Special"?: string,
 }
 
 export type DbPokemonMove = {

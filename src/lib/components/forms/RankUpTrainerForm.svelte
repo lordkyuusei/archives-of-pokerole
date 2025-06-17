@@ -116,10 +116,10 @@
         {:else}
             <RankUpSummary
                 {stat}
+                movesUpdates={[[], []]}
                 attrUpdates={attributes.filter((attr) => attr.values[2] > 0)}
                 socialUpdates={socials.filter((attr) => attr.values[2] > 0)}
                 skillUpdates={skills.filter((attr) => attr.values[2] > 0)}
-                learnedMoves={[]}
                 onPrevTab={() => (currentTab = 'character.skills')}
                 onSubmit={() => submit()}
             ></RankUpSummary>
@@ -139,15 +139,15 @@
 
     <style>
         fieldset {
-            display: grid;
-            grid-template: auto 1fr / 1fr;
+            display: flex;
+            flex-direction: column;
             gap: var(--medium-gap);
-            margin-inline: var(--large-gap);
 
             & > legend {
                 font-size: larger;
                 font-weight: bold;
                 text-align: center;
+                text-indent: var(--medium-gap);
             }
 
             & > ul {
@@ -159,8 +159,8 @@
                 background-color: var(--background-color);
 
                 & > li {
-                    height: calc(var(--large-gap) * 1.2);
                     aspect-ratio: 1;
+                    height: calc(var(--larger-gap));
                     border-radius: var(--large-gap);
                     border: 4px solid transparent;
                     border-radius: var(--small-gap);
@@ -184,6 +184,7 @@
         display: grid;
         grid-template-rows: auto 1fr;
         gap: var(--medium-gap);
+        overflow: hidden;
 
         & > ul.tabs {
             display: grid;
@@ -195,6 +196,7 @@
                 border-radius: 0;
                 width: 100%;
                 text-align: center;
+                padding-block: var(--small-gap);
                 background-color: var(--background-color);
 
                 &.selected {

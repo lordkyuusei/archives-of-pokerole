@@ -4,11 +4,25 @@
 
     import t from '$lib/i18n/i18n.svelte';
     import type { Box } from '$lib/types/box';
-    import type { DbMove } from '$lib/types/mongo/move';
-    import type { Ailment } from '$lib/constants/ailments';
-    import type { DbPartnerPokemon, DbPokemon } from '$lib/types/mongo/pokemon';
-    import { applyMigrationsToBoxes, applyMigrationsToPokemon } from '$lib/functions/migrations';
+    import { setStorage } from '$lib/state/storage.svelte';
+    import type { DbPartnerPokemon } from '$lib/types/mongo/pokemon';
     import { DEFAULT_PICTURE_URL, SHINY_PICTURE_URL, SPRITE_PICTURE_URL } from '$lib/constants/urls';
+
+    import {
+        addPokemonToParty,
+        getMoves,
+        getPokemon,
+        getPokemons,
+        getSpecie,
+        getSpecies,
+        removePokemonFromParty,
+        setPkmnMoves,
+        setPokemon,
+        setPokemonParty,
+        setPokemonProperty,
+        setSpecie,
+        updatePokemonInParty,
+    } from '$lib/state/pokemon.svelte';
 
     import BoxesList from '$lib/components/lodestones/BoxesList.svelte';
     import BoxesManagerForm from '$lib/components/forms/BoxesManagerForm.svelte';
@@ -20,21 +34,19 @@
     import RetrainPokemonForm from '$lib/components/forms/RetrainPokemonForm.svelte';
     import ReleasePokemonForm from '$lib/components/forms/ReleasePokemonForm.svelte';
     import LearnPokemonMoveForm from '$lib/components/forms/LearnPokemonMoveForm.svelte';
+    import { getBox, getBoxes, setBox, setBoxes } from '$lib/state/boxes.svelte';
 
-    let isSaving: boolean = $state(false);
-    let debounceTimeout: NodeJS.Timeout | null = null;
+    let boxes = $derived(getBoxes());
+    let box = $derived(getBox());
 
-    let boxes: { id: number; name: string }[] = $state([]);
-    let pokemons: WithId<DbPartnerPokemon>[] = $state([]);
-    let species: WithId<DbPokemon>[] = $state([]);
-    let moves: WithId<DbMove>[] = $state([]);
+    let pokemon = $derived(getPokemon());
+    let pokemons = $derived(getPokemons());
+    let pokemonInBox = $derived(pokemons.filter((p) => p.box === (box?.id ?? 0)));
 
-    let box: { id: number; name: string } | null = $state(null);
-    let pokemon: WithId<DbPartnerPokemon> | null = $state(null);
-    let specie: WithId<DbPokemon> | null = $state(null);
-    let pkmnMoves: WithId<DbMove>[] = $state([]);
+    let species = $derived(getSpecies());
+    let specie = $derived(getSpecie());
 
-    let pokemonInBox: WithId<DbPartnerPokemon>[] = $derived(pokemons.filter((p) => p.box === (box?.id ?? 0)));
+    let moves = $derived(getMoves());
 
     let showRankUpDialog: boolean = $state(false);
     let showEvolveDialog: boolean = $state(false);
@@ -44,137 +56,63 @@
     let showLearnMoveDialog: boolean = $state(false);
     let showManageBoxesDialog: boolean = $state(false);
 
-    const setPokemon = (pkmn: WithId<DbPartnerPokemon> | null) => {
-        pokemon = pkmn;
+    $effect(() => updateSelectedPokemon(pokemon));
 
+    const updateSelectedPokemon = (pkmn: DbPartnerPokemon | null) => {
         if (pkmn === null) {
-            specie = null;
-            pkmnMoves = [];
+            setSpecie(null);
+            setPkmnMoves([]);
         } else {
-            box = boxes.find((b) => b.id === pkmn.box) ?? boxes[0];
-            specie = species.find((specie) => specie._id.toString() === pokemon?.specie[0]) ?? null;
-            pkmnMoves = moves.filter((move) => pkmn.moves.includes(move['_id'].toString()));
+            const box = boxes.find((b) => b.id === pkmn.box);
+            const specie = species.find((specie) => specie._id.toString() === pokemon?.specie[0]) ?? null;
+            const pkmnMoves = moves.filter((move) => pkmn.moves.includes(move['_id'].toString()));
+
+            setBox(box);
+            setSpecie(specie);
+            setPkmnMoves(pkmnMoves);
         }
-    };
-
-    const savePokemons = () => {
-        isSaving = true;
-        if (debounceTimeout) clearTimeout(debounceTimeout);
-        debounceTimeout = setTimeout(() => {
-            localStorage.setItem('team', JSON.stringify(pokemons));
-            isSaving = false;
-        }, 1000);
-    };
-
-    const savePokemon = () => {
-        if (pokemon === null) return;
-
-        const index = pokemons.findIndex((p) => p.id === pokemon!.id);
-        pokemons[index] = pokemon;
-
-        savePokemons();
     };
 
     const releasePokemon = () => {
         if (pokemon === null) return;
 
-        const index = pokemons.findIndex((p) => p.id === pokemon!.id);
-        if (index === -1) return;
+        const box = pokemon.box;
+        removePokemonFromParty(pokemon);
 
-        pokemons = pokemons.toSpliced(index, 1);
-        localStorage.setItem('team', JSON.stringify(pokemons));
-        setPokemon(pokemons[0]);
+        const nextDisplayPokemon = pokemons.find((p) => p.box === box && p.id !== pokemon.id) || null;
+        if (!nextDisplayPokemon) {
+            setPokemon(pokemons[0]);
+        } else {
+            setPokemon(nextDisplayPokemon);
+        }
+
+        setStorage('team', pokemons);
     };
 
-    const changeHp = (value: number) => {
-        if (!pokemon || !specie) return;
-
-        pokemon.hp = Math.max(0, Math.min(pokemon.hp + value, specie['BaseHP'] + pokemon.attributes['Vitality']));
-        savePokemon();
-    };
-
-    const changeWp = (value: number) => {
-        if (!pokemon || !specie) return;
-
-        pokemon.will = Math.max(0, Math.min(pokemon.will + value, pokemon.attributes['Insight'] + 2));
-        savePokemon();
-    };
-
-    const changeItem = (item: string) => {
-        if (!pokemon) return;
-
-        pokemon.heldItem = item;
-        savePokemon();
-    };
-
-    const changeStatus = (status: Ailment) => {
-        if (!pokemon) return;
-
-        pokemon.status = status;
-        savePokemon();
-    };
-
-    const changeBattle = (battle: number) => {
-        if (!pokemon) return;
-
-        pokemon.battles += battle;
-        savePokemon();
-    };
-
-    const changeWins = (wins: number) => {
-        if (!pokemon) return;
-
-        pokemon.victories += wins;
-        savePokemon();
-    };
-
-    const changeNotes = (notes: string) => {
-        if (!pokemon) return;
-
-        pokemon.notes = notes;
-        savePokemon();
-    };
-
-    const changeLoyalty = (loyalty: number) => {
-        if (!pokemon) return;
-
-        pokemon.loyalty = loyalty;
-        savePokemon();
-    };
-
-    const changeHappiness = (happiness: number) => {
-        if (!pokemon) return;
-
-        pokemon.happiness = happiness;
-        savePokemon();
-    };
-
-    const updatePokemon = (pkmn: WithId<DbPartnerPokemon>) => {
+    const updatePokemon = (pkmn: DbPartnerPokemon) => {
         if (!pkmn) return;
 
         setPokemon(pkmn);
-        savePokemon();
     };
 
-    const updatePokemonList = (pkmns: WithId<DbPartnerPokemon>[]) => {
+    const updatePokemonList = (pkmns: DbPartnerPokemon[]) => {
         if (!pkmns && !pokemon) return;
 
-        pokemons = pkmns;
+        setPokemonParty(pkmns);
 
         const hasIdChange = pkmns.find((p) => p.id === pokemon.id)?.box !== pokemon?.box;
         if (hasIdChange) {
-            setPokemon(pokemons[0]);
+            updateSelectedPokemon(pokemons[0]);
         }
 
-        savePokemons();
+        setStorage('team', pokemons);
     };
 
-    const importPokemon = (pkmn: WithId<DbPartnerPokemon>) => {
+    const importPokemon = (pkmn: DbPartnerPokemon) => {
         if (!pkmn) return;
 
-        pokemons = [...pokemons, pkmn];
-        localStorage.setItem('team', JSON.stringify(pokemons));
-        setPokemon(pkmn);
+        updateSelectedPokemon(pkmn);
+        addPokemonToParty(pkmn);
     };
 
     const exportPokemon = () => {
@@ -191,35 +129,27 @@
         const index = boxes.findIndex((b) => b.id === boxId);
         if (index === -1) return;
 
-        box = boxes[index];
+        setBox(boxes[index]);
         setPokemon(pokemonInBox[0] || null);
+        updateSelectedPokemon(pokemonInBox[0] || null);
     };
 
     const updateBoxes = (newBoxes: Box[]) => {
         if (!newBoxes) return;
 
         const ids = newBoxes.map((b) => b.id);
-
-        boxes = newBoxes;
-        pokemons = pokemons.map((pkmn) => ({
+        const updatedPokemon = pokemons.map((pkmn) => ({
             ...pkmn,
             box: ids.includes(pkmn.box) ? pkmn.box : 0,
         }));
 
-        isSaving = true;
-        if (debounceTimeout) clearTimeout(debounceTimeout);
-        debounceTimeout = setTimeout(() => {
-            localStorage.setItem('boxes', JSON.stringify(newBoxes));
-            isSaving = false;
+        setBoxes(newBoxes);
+        setPokemonParty(updatedPokemon);
 
-            savePokemons();
-        }, 1000);
+        setStorage('boxes', newBoxes);
     };
 
-    const onPokemonDragStartHandle = (
-        event: DragEvent & { currentTarget: EventTarget & HTMLButtonElement },
-        pkmn: WithId<DbPartnerPokemon>,
-    ) => {
+    const onPokemonDragStartHandle = (event: DragEvent & { currentTarget: EventTarget & HTMLButtonElement }, pkmn: DbPartnerPokemon) => {
         if (!event.dataTransfer) return;
 
         event.dataTransfer.setData('text/plain', pkmn.id);
@@ -227,38 +157,19 @@
         event.currentTarget.style.opacity = '0.5';
     };
 
-    const onPokemonDragEndHandle = (
-        event: DragEvent & { currentTarget: EventTarget & HTMLButtonElement },
-        pkmn: WithId<DbPartnerPokemon>,
-    ) => {
+    const onPokemonDragEndHandle = (event: DragEvent & { currentTarget: EventTarget & HTMLButtonElement }) => {
         if (!event.dataTransfer) return;
 
         event.currentTarget.style.opacity = '1';
     };
 
-    onMount(async () => {
-        const boxesAsString = localStorage.getItem('boxes');
-        const pokemonsAsString = localStorage.getItem('team');
-
-        pokemons = applyMigrationsToPokemon(JSON.parse(pokemonsAsString ?? '[]'));
-        boxes = applyMigrationsToBoxes(JSON.parse(boxesAsString ?? '[]'), t('home.pokemon.title-team'));
-
-        const party = pokemons.map((pkmn) => pkmn.specie).join(',');
-        const knownMoves = pokemons.flatMap((pkmn) => pkmn.moves).join(',');
-
-        const data = await fetch('/api/pokemons?species=' + party + '&moves=' + knownMoves);
-        const json = await data.json();
-
-        moves = json.moves;
-        species = json.species;
-
-        if (pokemons.length > 0) {
-            setPokemon(pokemons[0]);
-        }
+    onMount(() => {
+        updateSelectedPokemon(pokemonInBox[0] || null);
     });
 </script>
 
 <section class="homepage">
+    <!-- List of Pokemon in current box-->
     <pkmn-list class="wrapper" data-title={box?.name}>
         {#if box !== null}
             {#if pokemonInBox.length === 0}
@@ -271,46 +182,38 @@
                     class:selected={pkmn === pokemon}
                     onclick={() => setPokemon(pkmn)}
                     ondragstart={(event) => onPokemonDragStartHandle(event, pkmn)}
-                    ondragend={(event) => onPokemonDragEndHandle(event, pkmn)}
-                    style:--url="url('{SPRITE_PICTURE_URL}{pkmn.specie[1]}.png')"
-                >
+                    ondragend={(event) => onPokemonDragEndHandle(event)}
+                    style:--url="url('{SPRITE_PICTURE_URL}{pkmn.specie[1]}.png')">
                     {pkmn.nickname}
                 </button>
             {/each}
-            <BoxesList {boxes} {pokemons} {updatePokemonList} {setCurrentBox}></BoxesList>
+            <BoxesList {updatePokemonList} {setCurrentBox}></BoxesList>
         {/if}
     </pkmn-list>
+
+    <!-- List of meta-actions -->
     <pkmn-list-actions class="wrapper" data-title={t('home.pokemon.title-actions')}>
         <button onclick={() => (showManageBoxesDialog = true)}>{t('home.pokemon.action-boxes')}</button>
         <button onclick={() => (showImportDialog = true)}>{t('home.pokemon.action-import')}</button>
     </pkmn-list-actions>
+
+    <!-- Selected Pokemon's stats, identity & socials -->
     <pkmn-selected class="wrapper">
         {#if pokemon && specie}
-            <PkmnAttributesSkills {pokemon} {specie}></PkmnAttributesSkills>
-            <PkmnIdentitySocials
-                {pokemon}
-                {specie}
-                moves={pkmnMoves}
-                {changeHp}
-                {changeWp}
-                {changeItem}
-                {changeStatus}
-                {changeBattle}
-                {changeWins}
-                {changeNotes}
-                {changeLoyalty}
-                {changeHappiness}
-            ></PkmnIdentitySocials>
+            <PkmnAttributesSkills></PkmnAttributesSkills>
+            <PkmnIdentitySocials></PkmnIdentitySocials>
         {/if}
     </pkmn-selected>
+
+    <!-- Actions for the selected Pokemon -->
     <pkmn-actions>
         {#if pokemon && specie}
             <pkmn-infos
                 class="wrapper"
                 data-title={pokemon.specie[0]}
-                style:--url="url('{pokemon.shiny ? SHINY_PICTURE_URL : DEFAULT_PICTURE_URL}/{pokemon.specie[1]}.png')"
-            >
+                style:--url="url('{pokemon.shiny ? SHINY_PICTURE_URL : DEFAULT_PICTURE_URL}/{pokemon.specie[1]}.png')">
                 <a href="/pokemon/{specie._id}"><button>{t('home.pokemon.action-check-pokedex')}</button></a>
+                <input type="text" value={pokemon.nickname} oninput={({ currentTarget }) => setPokemonProperty('nickname', currentTarget.value)} />
             </pkmn-infos>
             <pkmn-updates class="wrapper" data-title="Actions">
                 <button onclick={() => (showRankUpDialog = true)}>{t('home.pokemon.action-rank-up')}</button>
@@ -334,18 +237,15 @@
 
 {#if specie && pokemon}
     {#if showRankUpDialog}
-        <RankUpPokemonForm bind:isOpen={showRankUpDialog} {pokemon} {specie} {moves} {updatePokemon}
-        ></RankUpPokemonForm>
+        <RankUpPokemonForm bind:isOpen={showRankUpDialog} {pokemon} {specie} {moves} {updatePokemon}></RankUpPokemonForm>
     {/if}
 
     {#if showRetrainDialog}
-        <RetrainPokemonForm bind:isOpen={showRetrainDialog} {pokemon} {specie} {moves} {updatePokemon}
-        ></RetrainPokemonForm>
+        <RetrainPokemonForm bind:isOpen={showRetrainDialog} {pokemon} {specie} {moves} {updatePokemon}></RetrainPokemonForm>
     {/if}
 
     {#if showEvolveDialog}
-        <EvolvePokemonForm bind:isOpen={showEvolveDialog} {pokemon} {specie} {moves} {updatePokemon}
-        ></EvolvePokemonForm>
+        <EvolvePokemonForm bind:isOpen={showEvolveDialog} {pokemon} {specie} {moves} {updatePokemon}></EvolvePokemonForm>
     {/if}
 
     {#if showLearnMoveDialog}
@@ -353,11 +253,7 @@
     {/if}
 
     {#if showReleaseDialog}
-        <ReleasePokemonForm
-            bind:isOpen={showReleaseDialog}
-            nickname={pokemon.nickname}
-            specie={pokemon.specie[0]}
-            {releasePokemon}
+        <ReleasePokemonForm bind:isOpen={showReleaseDialog} nickname={pokemon.nickname} specie={pokemon.specie[0]} {releasePokemon}
         ></ReleasePokemonForm>
     {/if}
 {/if}
@@ -393,10 +289,6 @@
                     color: var(--background-second-color);
                     border-color: var(--background-color);
                 }
-
-                &.dragging {
-                    display: none;
-                }
             }
         }
 
@@ -423,19 +315,32 @@
             display: flex;
             flex-direction: column;
             gap: var(--large-gap);
-        }
 
-        & > pkmn-actions > pkmn-infos {
-            background-image: var(--url);
-            background-position: center center;
-            background-size: cover;
-            background-blend-mode: hard-light;
-        }
+            & > pkmn-infos,
+            & > pkmn-updates {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
 
-        & > pkmn-actions > pkmn-updates {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            & > pkmn-infos {
+                gap: var(--medium-gap);
+                background-image: var(--url);
+                background-position: center center;
+                background-size: cover;
+                background-blend-mode: hard-light;
+
+                & > input {
+                    height: auto;
+                    backdrop-filter: blur(var(--large-gap));
+                    background: hsl(from var(--background-color) h s l / 0.5);
+                    border: var(--smaller-gap) solid currentColor;
+                    border-radius: var(--large-gap);
+                }
+                & > a button {
+                    width: 100%;
+                }
+            }
         }
     }
 
@@ -449,12 +354,12 @@
             & > pkmn-actions {
                 display: grid;
                 grid-template-columns: auto 1fr;
-                
+
                 & > pkmn-infos {
                     background-size: contain;
                     background-repeat: no-repeat;
                 }
-                
+
                 & > pkmn-updates {
                     flex-direction: row;
                     gap: var(--medium-gap);

@@ -5,27 +5,32 @@
     import type { Box } from '$lib/types/box';
     import { SPRITE_PICTURE_URL } from '$lib/constants/urls';
     import type { DbPartnerPokemon } from '$lib/types/mongo/pokemon';
+    import { getPokemons } from '$lib/state/pokemon.svelte';
+    import { getBoxes } from '$lib/state/boxes.svelte';
 
     const MAX_POKEMON_PREVIEW = 6;
 
     type Props = {
-        boxes: { id: number; name: string }[];
-        pokemons: WithId<DbPartnerPokemon>[];
         setCurrentBox: (boxId: number) => void;
-        updatePokemonList: (pokemonList: WithId<DbPartnerPokemon>[]) => void;
+        updatePokemonList: (pokemonList: DbPartnerPokemon[]) => void;
     };
 
-    let { boxes, pokemons, updatePokemonList, setCurrentBox }: Props = $props();
+    let { updatePokemonList, setCurrentBox }: Props = $props();
+
+    let boxes = $derived(getBoxes());
+    let pokemons = $derived(getPokemons());
 
     let show: boolean = $state(false);
-    let currentPokemonList: WithId<DbPartnerPokemon>[] = $derived(pokemons);
 
     const changeBox = (boxId: number) => {
         setCurrentBox(boxId);
         show = !show;
-    }
+    };
 
-    const onDragStartElementHandle = (event: DragEvent & { currentTarget: HTMLImageElement }, pkmn: WithId<DbPartnerPokemon>, box: Box) => {
+    const onDragStartElementHandle = (
+        event: DragEvent & { currentTarget: HTMLImageElement },
+        pkmn: DbPartnerPokemon,
+    ) => {
         if (!event.dataTransfer) return;
 
         event.dataTransfer.setData('text/plain', pkmn.id);
@@ -33,17 +38,17 @@
         event.currentTarget.style.opacity = '0.5';
     };
 
-    const onDragEndElementHandle = (event: DragEvent & { currentTarget: EventTarget & HTMLImageElement}) => {
+    const onDragEndElementHandle = (event: DragEvent & { currentTarget: EventTarget & HTMLImageElement }) => {
         if (!event.dataTransfer) return;
 
-        event.currentTarget.style.opacity = "1";
+        event.currentTarget.style.opacity = '1';
     };
-    
+
     const onDragOverElementHandle = (event: DragEvent & { currentTarget: HTMLLIElement }) => {
         event.preventDefault();
         event.currentTarget.style.borderColor = 'var(--second-color)';
     };
-    
+
     const onDragLeaveElementHandle = (event: DragEvent & { currentTarget: HTMLLIElement }) => {
         event.preventDefault();
         event.currentTarget.style.borderColor = 'var(--accent-color)';
@@ -52,22 +57,24 @@
     const onDropElementHandle = (event: DragEvent & { currentTarget: HTMLLIElement }, box: Box) => {
         if (!event.dataTransfer) return;
 
-        if (box.id === 0 && currentPokemonList.filter(p => p.box === 0).length === MAX_POKEMON_PREVIEW) return;
+        if (box.id === 0 && pokemons.filter((p) => p.box === 0).length === MAX_POKEMON_PREVIEW) return;
 
         const id = event.dataTransfer.getData('text/plain');
-        const matchingPokemonIndex = currentPokemonList.findIndex((p) => p.id === id);
+        const matchingPokemonIndex = pokemons.findIndex((p) => p.id === id);
 
         if (matchingPokemonIndex < 0) return;
-        currentPokemonList[matchingPokemonIndex].box = box.id;
-        updatePokemonList(currentPokemonList);
+        pokemons[matchingPokemonIndex].box = box.id;
+        updatePokemonList(pokemons);
     };
+
+    $inspect(pokemons);
 </script>
 
 <boxes-list role="tree">
     <button title={t('boxes.form.title-box')} onclick={() => (show = !show)}><span>_</span></button>
     <ul class="wrapper boxes-list" data-title={t('home.boxes.title-box')} class:show>
         {#each boxes as box, i (box.id)}
-            {@const pokemonInBox = currentPokemonList.filter((p) => p.box === box.id)}
+            {@const pokemonInBox = pokemons.filter((p) => p.box === box.id)}
             <li
                 class="tag"
                 class:show-additional={i !== 0 && pokemonInBox.length > MAX_POKEMON_PREVIEW - 1}
@@ -115,8 +122,11 @@
                 cursor: pointer;
             }
 
-            &::before, &::after, & > span::before, & > span::after {
-                content: "";
+            &::before,
+            &::after,
+            & > span::before,
+            & > span::after {
+                content: '';
                 position: absolute;
                 height: 30%;
                 border-radius: var(--small-gap);

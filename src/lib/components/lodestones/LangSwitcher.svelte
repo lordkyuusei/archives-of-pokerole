@@ -19,7 +19,7 @@
     });
 </script>
 
-<div style:display="inline flex">
+<div style:display="inline flex" style:align-items="center" style:gap="0.5rem">
     <label id="lang-switch" for="lang-switch">{lang}</label>
     <Toggle toggled={lang === 'en'} onToggle={(value) => updateLang(value ? 'en' : 'fr')}></Toggle>
 </div>

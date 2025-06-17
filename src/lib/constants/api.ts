@@ -1,0 +1,1 @@
+export const GET_POKEMON_SPECIES_MOVES = '/api/pokemons';

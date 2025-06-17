@@ -1,4 +1,5 @@
 import type { TrainerSkill } from "$lib/constants/skills";
+import type { Tween } from "svelte/motion";
 import type { DbPokemonAttribute, DbPokemonRank, DbPokemonSocial } from "./pokemon";
 
 export enum PokemonStudyState {
@@ -30,11 +31,11 @@ export type Trainer = {
     badges: TrainerBadges
 }
 
+export type TrainerHealingBagItem = "Potions" | "S. Potions" | "H. Potions";
+
 export type TrainerHealingBag = {
-    "Potions": [number, number, number],
-    "S. Potions": [number, number, number],
-    "H. Potions": [number, number, number]
-}
+    [key in TrainerHealingBagItem]: [number, number, number];
+};
 
 type TrainerAttributes = {
     [x in Exclude<DbPokemonAttribute, 'Special'>]: number;

@@ -10,7 +10,7 @@
     type Props = {
         isOpen: boolean;
         boxes: Box[];
-        pokemons: WithId<DbPartnerPokemon>[];
+        pokemons: DbPartnerPokemon[];
         updateBoxes: (boxes: Box[]) => void;
     };
 

@@ -34,7 +34,7 @@
             </li>
         {/each}
     </ul>
-    <div style="display: grid; grid-auto-flow: column; gap: var(--medium-gap);">
+    <div style="display: grid; grid-auto-flow: column; gap: var(--large-gap);">
         <button onclick={() => onPrevTab()}>{t('previous')}</button>
         <button onclick={() => onNextTab()} disabled={skillPoints - skillsIncreaseVal !== 0}>{t('next')}</button>
     </div>
@@ -44,19 +44,21 @@
     rank-up-skills {
         display: grid;
         grid-template-rows: auto 1fr auto;
-        gap: var(--small-gap);
+        gap: var(--large-gap);
+        min-height: 0;
 
         & > ul {
             display: grid;
-            grid-template: repeat(5, 1fr) / repeat(3, 1fr);
-            gap: var(--medium-gap);
-            margin: var(--large-gap);
+            grid-template: repeat(4, 1fr) / repeat(3, 1fr);
+            gap: var(--medium-gap) var(--larger-gap);
+            margin-inline: var(--larger-gap);
+            margin-bottom: var(--larger-gap);
 
             & > li {
                 display: grid;
-                grid-template: 100% / auto 1fr auto;
-                gap: var(--medium-gap);
-                align-items: center;
+                grid-template: 1fr / auto 1fr auto;
+                gap: var(--large-gap);
+                align-items: end;
             }
         }
     }

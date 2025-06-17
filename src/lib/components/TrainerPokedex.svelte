@@ -7,14 +7,18 @@
     import { fromBase64, getPokemonStatus, setPokemonStatus, toBase64 } from '$lib/functions/binaryPokedexStorage';
 
     import Toggle from './fragments/Toggle.svelte';
+    import type { DbPokemonShort } from '$lib/types/mongo/pokemon';
+    import { getLang } from '$lib/i18n/lang.svelte';
+    import { setTrainerProperty } from '$lib/state/trainer.svelte';
 
     type Props = {
-        species: WithId<{ Name: string; DexID: string; Number: number }>[];
+        species: WithId<DbPokemonShort>[];
         pokedex: string;
-        changePokedex: (pokedex: string) => void;
     };
-    let { species, pokedex, changePokedex }: Props = $props();
 
+    let { species, pokedex }: Props = $props();
+
+    let lang = $derived(getLang());
     let showSeen: boolean = $state(false);
     let showCaught: boolean = $state(false);
 
@@ -24,31 +28,30 @@
     let speciesMap = $derived(Object.fromEntries(species.map((s, i) => [s.DexID, i])));
     let pokedexBits = $derived(fromBase64(pokedex, species.length));
 
-    $inspect(speciesMap, pokedexBits);
     let filteredSpecies = $derived(
-        species.filter((x) => {
-            const name = x.Name.toLowerCase();
+        species.filter((x, i) => {
+            const name = [x.I18n?.fr.toLowerCase(), x.I18n?.en.toLowerCase(), x.Name.toLowerCase()];
             const status = getPokemonStatus(pokedexBits, speciesMap[x.DexID]);
 
-            const filteredByName = name.includes(searchableTerm) || x.DexID.toString().includes(searchableTerm);
-            const filterBySeen = showSeen
-                ? status === PokemonStudyState.Seen || status === PokemonStudyState.Caught
-                : true;
+            const filteredByName = name.some((n) => n?.includes(searchTerm)) || x.DexID.toString().includes(searchableTerm);
+            const filterBySeen = showSeen ? status === PokemonStudyState.Seen || status === PokemonStudyState.Caught : true;
             const filterByCaught = showCaught ? status === PokemonStudyState.Caught : true;
+
             return filteredByName && filterBySeen && filterByCaught;
         }),
     );
 
     const switchState = (index: number, status: number) => {
-        if (status === PokemonStudyState.NeverMet) {
-            pokedexBits = setPokemonStatus(pokedexBits, index, PokemonStudyState.Seen);
-        } else if (status === PokemonStudyState.Seen) {
-            pokedexBits = setPokemonStatus(pokedexBits, index, PokemonStudyState.Caught);
-        } else {
-            pokedexBits = setPokemonStatus(pokedexBits, index, PokemonStudyState.NeverMet);
-        }
+        const newState =
+            status === PokemonStudyState.NeverMet
+                ? PokemonStudyState.Seen
+                : status === PokemonStudyState.Seen
+                  ? PokemonStudyState.Caught
+                  : PokemonStudyState.NeverMet;
 
-        changePokedex(toBase64(pokedexBits));
+        pokedexBits = setPokemonStatus(pokedexBits, index, newState);
+
+        setTrainerProperty('pokedex', toBase64(pokedexBits));
     };
 </script>
 
@@ -61,14 +64,15 @@
         <Toggle bind:toggled={showCaught}></Toggle>
     </div>
     <ul>
-        {#each filteredSpecies as { Number, DexID, Name, _id } (_id)}
+        {#each filteredSpecies as { Number, DexID, Name, I18n, _id } (_id)}
+            {@const name = I18n ? I18n[lang] : Name}
             {@const index = speciesMap[DexID]}
             {@const status = getPokemonStatus(pokedexBits, index)}
             <li class:seen={status === 1} class:caught={status === 2}>
                 <a href="#null" onclick={() => switchState(index, status)}>
                     <h3>#{DexID}</h3>
-                    <img src={SPRITE_PICTURE_URL + Number + '.png'} loading="lazy" alt={Name} />
-                    <span>{Name}</span>
+                    <img src={SPRITE_PICTURE_URL + Number + '.png'} loading="lazy" alt={name} />
+                    <span>{name}</span>
                 </a>
             </li>
         {/each}

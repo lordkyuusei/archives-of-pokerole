@@ -61,7 +61,7 @@
 </script>
 
 <moves-list class:wrapper={onMoveSelection === null} class:selectable={onMoveSelection !== null} data-title="Capacités">
-    <div class="overflow-container">
+    <div class="overflow-container" class:overflow={onMoveSelection === null}>
         <table>
             <thead>
                 <tr>
@@ -122,11 +122,19 @@
 
         & > div.overflow-container {
             height: 100%;
-            overflow-y: auto;
+
+            &.overflow {
+                overflow-y: auto;
+            }
 
             & > table {
                 font-size: small;
                 border-radius: var(--medium-gap);
+
+                & > thead tr {
+                    position: sticky;
+                    top: 0;
+                }
 
                 & td {
                     text-align: center;

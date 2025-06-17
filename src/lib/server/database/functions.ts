@@ -44,7 +44,7 @@ const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTran
     })
 }
 
-export const generatePokemon = async (types: string[], ranks: string[], isEvolved: boolean, isStarter: boolean): Promise<DbPokemon[]> => {
+export const generatePokemon = async (types: string[], ranks: string[], isEvolved: boolean, isStarter: boolean): Promise<WithId<DbPokemon>[]> => {
     const query: any = {
         $or: [{ Type1: { $in: types } }, { Type2: { $in: types } }],
     };
@@ -120,7 +120,7 @@ export const getNaturesFromDb = async () =>
     await mongo.collection<DbNature>("Natures").find().toArray();
 
 export const getAllPokemonFromDb = async () =>
-    await mongo.collection<DbPokemon>("Pokedex").find({ DexID: { $not: /[(FM)]/ } }, { projection: { _id: 1, Name: 1, Number: 1, DexID: 1 } }).sort({ DexID: 1 }).toArray();
+    await mongo.collection<DbPokemon>("Pokedex").find({ DexID: { $not: /[(FM)]/ } }, { projection: { _id: 1, Name: 1, Number: 1, DexID: 1, I18n: 1 } }).sort({ DexID: 1 }).toArray();
 
 export const getAllMovesFromDb = async () =>
     await mongo.collection<DbPokemon>("Moves").find().sort().toArray();

@@ -2,22 +2,13 @@
     import t from '$lib/i18n/i18n.svelte';
     import type { Ailment } from '$lib/constants/ailments';
     import { getLang, type Lang } from '$lib/i18n/lang.svelte';
-    import type { DbPokemon, DbPartnerPokemon } from '$lib/types/mongo/pokemon';
-
     import PartnerAttribute from './PartnerAttribute.svelte';
+    import { getPokemon, getSpecie } from '$lib/state/pokemon.svelte';
 
-    type Props = { pokemon: DbPartnerPokemon; specie: DbPokemon };
-    let { pokemon, specie }: Props = $props();
-
-    let ailment: Ailment = $derived(pokemon.status);
+    let pokemon = $derived(getPokemon());
+    let specie = $derived(getSpecie());
 
     let lang: Lang = $derived(getLang());
-    let heightUnit: string = $derived(
-        lang === 'en' ? specie['Height']['Feet'] + '"' : specie['Height']['Meters'] + ' m',
-    );
-    let weightUnit: string = $derived(
-        lang === 'en' ? specie['Weight']['Pounds'] + ' pounds' : specie['Weight']['Kilograms'] + ' kgs',
-    );
 
     const mapAilmentToEffect: { [x: string]: number } = {
         Paralysis_Dexterity: -2,
@@ -36,35 +27,39 @@
 {/snippet}
 
 <div class="wrapper stats" data-title={t('home.character.attributes-skills')}>
-    <ul class="attributes">
-        {#each Object.entries(pokemon.attributes) as [key, value] (key)}
-            <li
-                class:ailment={mapAilmentToEffect[`${ailment}_${key}`]}
-                data-ailment="{mapAilmentToAcronym[ailment]}: -2"
-            >
-                <PartnerAttribute
-                    name={t(`character.attribute.${key}`)}
-                    {value}
-                    minValue={specie[key]}
-                    maxValue={specie['Max' + key]}
-                ></PartnerAttribute>
-            </li>
-        {/each}
-    </ul>
+    {#if pokemon && specie}
+        {@const heightUnit = lang === 'en' ? specie['Height']['Feet'] + '"' : specie['Height']['Meters'] + ' m'}
+        {@const weightUnit = lang === 'en' ? specie['Weight']['Pounds'] + ' pounds' : specie['Weight']['Kilograms'] + ' kgs'}
 
-    <ul class="measurments">
-        {@render metric(t('pokedex.pokemon.data-height'), heightUnit)}
-        {@render metric(t('pokedex.pokemon.data-weight'), weightUnit)}
-    </ul>
+        <ul class="attributes">
+            {#each Object.entries(pokemon.attributes) as [key, value] (key)}
+                {@const ailmentEffect = mapAilmentToEffect[`${pokemon.status}_${key}`]}
+                {@const ailmentAcronym = mapAilmentToAcronym[pokemon.status]}
+                <li class:ailment={ailmentEffect} data-ailment="{ailmentAcronym}: -2">
+                    <PartnerAttribute
+                        {value}
+                        name={t(`character.attribute.${key}`)}
+                        minValue={specie[key]}
+                        maxValue={specie['Max' + key]}
+                    ></PartnerAttribute>
+                </li>
+            {/each}
+        </ul>
 
-    <ul class="skills">
-        {#each Object.entries(pokemon.skills) as [key, value]}
-            <li>
-                <PartnerAttribute name={t(`character.attribute.${key}`)} {value} minValue={0} maxValue={5}
-                ></PartnerAttribute>
-            </li>
-        {/each}
-    </ul>
+        <ul class="measurments">
+            {@render metric(t('pokedex.pokemon.data-height'), heightUnit)}
+            {@render metric(t('pokedex.pokemon.data-weight'), weightUnit)}
+        </ul>
+
+        <ul class="skills">
+            {#each Object.entries(pokemon.skills) as [key, value]}
+                <li>
+                    <PartnerAttribute name={t(`character.attribute.${key}`)} {value} minValue={0} maxValue={5}
+                    ></PartnerAttribute>
+                </li>
+            {/each}
+        </ul>
+    {/if}
 </div>
 
 <style>

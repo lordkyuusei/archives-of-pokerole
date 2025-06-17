@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { ObjectId, WithId } from 'mongodb';
 
-    import t from "$lib/i18n/i18n.svelte";
+    import t from '$lib/i18n/i18n.svelte';
     import type { DbMove } from '$lib/types/mongo/move';
     import type { DbPokemon } from '$lib/types/mongo/pokemon';
     import MovesList from '$lib/components/lodestones/pokemon/MovesList.svelte';
@@ -43,17 +43,19 @@
         return true;
     };
 
-    $inspect(learnableMoves)
+    $inspect(learnableMoves);
 </script>
 
 <rank-up-moveset>
     <h2>{t('form.training.new-moveset')} {learnableAmount}</h2>
     {#if canLearnNewMoves}
-        <MovesList pokemon={specie} moves={learnableMoves} {onMoveSelection}></MovesList>
+        <div class="form-content">
+            <MovesList pokemon={specie} moves={learnableMoves} {onMoveSelection}></MovesList>
+        </div>
     {:else}
         <p>{t('form.training.error-new-moveset')}</p>
     {/if}
-    <div style="display: grid; grid-auto-flow: column; gap: var(--medium-gap);">
+    <div class="form-actions">
         <button onclick={() => onPrevTab()}>{t('previous')}</button>
         <button
             onclick={() => onNextTab()}
@@ -66,6 +68,20 @@
     rank-up-moveset {
         display: grid;
         grid-template-rows: auto 1fr auto;
-        gap: var(--small-gap);
+        gap: var(--large-gap);
+        min-height: 0;
+
+        & > div.form-content {
+            height: 100%;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        & > div.form-actions {
+            display: grid;
+            grid-auto-flow: column;
+            padding-inline: var(--large-gap);
+            gap: var(--large-gap);
+        }
     }
 </style>

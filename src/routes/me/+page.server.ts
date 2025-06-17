@@ -1,4 +1,3 @@
-import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { getAllPokemonFromDb } from "$lib/server/database/functions";
 

@@ -5,7 +5,7 @@ import type { DbPokemonMove, DbPokemonRank } from "$lib/types/mongo/pokemon";
 import type { DbMove, DbMoveLight } from "$lib/types/mongo/move";
 import { getIdFromName } from "./getIdFromName";
 
-const getLearnableMoves = (moves: WithId<DbPokemonMove>[], rank: DbPokemonRank) => {
+export const getLearnableMoves = (moves: WithId<DbPokemonMove>[], rank: DbPokemonRank) => {
     const rankOrder = pokemonRankOrder[rank];
 
     const learnableMoves = moves.filter((move) => pokemonRankOrder[move["Learned"]] <= rankOrder);

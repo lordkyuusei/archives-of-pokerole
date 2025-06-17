@@ -16,13 +16,14 @@
     import RankUpSummary from './rank-up/RankUpSummary.svelte';
     import RankUpSocials from './rank-up/RankUpSocials.svelte';
     import RankUpAttributes from './rank-up/RankUpAttributes.svelte';
-
+    import { getIdFromName } from '$lib/functions/getIdFromName';
+    
     type Props = {
-        pokemon: WithId<DbPartnerPokemon>;
+        pokemon: DbPartnerPokemon;
         specie: WithId<DbPokemon>;
         moves: WithId<DbMove>[];
         isOpen: boolean;
-        updatePokemon: (pokemon: WithId<DbPartnerPokemon>) => void;
+        updatePokemon: (pokemon: DbPartnerPokemon) => void;
     };
 
     let { pokemon: pkmn, specie, moves, isOpen = $bindable(), updatePokemon }: Props = $props();
@@ -81,14 +82,15 @@
         );
 
         updatedPokemon.rank = rankUpSetting.to;
-        updatedPokemon.moves = [...updatedPokemon.moves, ...learnedMoves];
+        updatedPokemon.moves = [...updatedPokemon.moves, ...learnedMoves.map(x => x.toString())];
         updatePokemon(updatedPokemon);
         isOpen = false;
     };
 
     onMount(() => {
         rankUpSetting = rankUpSettings.find((conf) => conf.from === pkmn.rank) ?? rankUpSettings[0];
-        learnableMoves = getLearnableMovesData(moves, specie['Moves'], rankUpSetting.to, pkmn.moves);
+        const notLearnedMoves = specie['Moves'].filter(m => !pkmn.moves.includes(getIdFromName(m.Name)));
+        learnableMoves = getLearnableMovesData(moves, notLearnedMoves, rankUpSetting.to);
     });
 </script>
 
@@ -136,11 +138,11 @@
             ></RankUpSkills>
         {:else}
             <RankUpSummary
+                {stat}
+                movesUpdates={[pkmn.moves, learnedMoves]}
                 attrUpdates={attributes.filter((attr) => attr.values[2] > 0)}
                 socialUpdates={socials.filter((attr) => attr.values[2] > 0)}
                 skillUpdates={skills.filter((attr) => attr.values[2] > 0)}
-                {learnedMoves}
-                {stat}
                 onPrevTab={() => (currentTab = 'character.skills')}
                 onSubmit={() => submit()}
             ></RankUpSummary>
@@ -160,15 +162,15 @@
 
     <style>
         fieldset {
-            display: grid;
-            grid-template: auto 1fr / 1fr;
+            display: flex;
+            flex-direction: column;
             gap: var(--medium-gap);
-            margin-inline: var(--large-gap);
 
             & > legend {
                 font-size: larger;
                 font-weight: bold;
                 text-align: center;
+                text-indent: var(--medium-gap);
             }
 
             & > ul {
@@ -180,8 +182,8 @@
                 background-color: var(--background-color);
 
                 & > li {
-                    height: calc(var(--large-gap) * 1.2);
                     aspect-ratio: 1;
+                    height: calc(var(--larger-gap));
                     border-radius: var(--large-gap);
                     border: 4px solid transparent;
                     border-radius: var(--small-gap);
@@ -205,7 +207,7 @@
         display: grid;
         grid-template-rows: auto 1fr;
         gap: var(--medium-gap);
-        overflow-y: auto;
+        overflow: hidden;
 
         & > ul.tabs {
             display: grid;
@@ -217,6 +219,7 @@
                 border-radius: 0;
                 width: 100%;
                 text-align: center;
+                padding-block: var(--small-gap);
                 background-color: var(--background-color);
 
                 &.selected {

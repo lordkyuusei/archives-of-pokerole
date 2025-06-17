@@ -7,11 +7,22 @@
     import Evolution from '$lib/components/lodestones/pokemon/Evolution.svelte';
     import AddNewPokemonForm from '$lib/components/forms/AddNewPokemonForm.svelte';
     import BattleStats from '$lib/components/lodestones/pokemon/BattleStats.svelte';
+    import GeneratePokemonForm from '$lib/components/forms/GeneratePokemonForm.svelte';
+    import type { DbPartnerPokemon } from '$lib/types/mongo/pokemon';
+    import { addPokemonToParty } from '$lib/state/pokemon.svelte';
+    import { goto } from '$app/navigation';
+    import { redirect } from '@sveltejs/kit';
 
     let { data }: PageProps = $props();
     let { pokemon, moves } = data;
 
     let isAddPokemonFormOpen: boolean = $state(false);
+    let showGeneratePokemonForm: boolean = $state(false);
+
+    const onPokemonGenerated = (pokemon: DbPartnerPokemon) => {
+        addPokemonToParty(pokemon);
+        goto('/', { invalidateAll: true });
+    };
 </script>
 
 <div class="infos">
@@ -25,9 +36,13 @@
     <Evolution {pokemon}></Evolution>
     <div class="actions wrapper" data-title="Actions">
         <button onclick={() => (isAddPokemonFormOpen = true)}>🔴 {t('pokedex.pokemon.action-add-party')}</button>
+        <button onclick={() => (showGeneratePokemonForm = true)}>🔴 {t('pokedex.pokemon.action-generate')}</button>
     </div>
 </div>
 
+{#if showGeneratePokemonForm}
+    <GeneratePokemonForm {pokemon} bind:isOpen={showGeneratePokemonForm} {onPokemonGenerated}></GeneratePokemonForm>
+{/if}
 {#if isAddPokemonFormOpen}
     <AddNewPokemonForm {pokemon} bind:isOpen={isAddPokemonFormOpen}></AddNewPokemonForm>
 {/if}
@@ -47,5 +62,12 @@
         display: grid;
         grid-template-rows: 1fr auto;
         gap: var(--large-gap);
+
+        & .actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: var(--large-gap);
+        }
     }
 </style>

@@ -33,7 +33,7 @@
             </li>
         {/each}
     </ul>
-    <div style="display: grid; grid-auto-flow: column; gap: var(--medium-gap);">
+    <div style="display: grid; grid-auto-flow: column; gap: var(--large-gap);">
         <button onclick={() => onPrevTab()}>{t('previous')}</button>
         <button onclick={() => onNextTab()}>{t('next')}</button>
     </div>
@@ -43,7 +43,8 @@
     rank-up-socials {
         display: grid;
         grid-template-rows: auto 1fr auto;
-        gap: var(--small-gap);
+        gap: var(--large-gap);
+        min-height: 0;
 
         & > ul {
             display: grid;
@@ -56,8 +57,8 @@
 
                 display: grid;
                 grid-template: 100% / auto 1fr auto;
-                gap: var(--medium-gap);
-                align-items: center;
+                gap: var(--large-gap);
+                align-items: end;
             }
         }
     }

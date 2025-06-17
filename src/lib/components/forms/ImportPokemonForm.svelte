@@ -7,7 +7,7 @@
 
     type Props = {
         isOpen: boolean;
-        importPokemon: (pokemon: WithId<DbPartnerPokemon>) => void;
+        importPokemon: (pokemon: DbPartnerPokemon) => void;
     };
 
     let { isOpen = $bindable(), importPokemon }: Props = $props();
@@ -15,7 +15,7 @@
     let importText: string = $state('');
 
     let submit = () => {
-        const newPokemon = JSON.parse(importText) as WithId<DbPartnerPokemon>;
+        const newPokemon = JSON.parse(importText) as DbPartnerPokemon;
         newPokemon.id = crypto.randomUUID();
         newPokemon.box = 0;
         importPokemon(newPokemon);

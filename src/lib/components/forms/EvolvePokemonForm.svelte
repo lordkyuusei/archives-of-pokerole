@@ -26,11 +26,11 @@
     import type { SpeciesAndMoves } from '$lib/types/api/pokemons';
 
     type Props = {
-        pokemon: WithId<DbPartnerPokemon>;
+        pokemon: DbPartnerPokemon;
         specie: WithId<DbPokemon>;
         moves: WithId<DbMove>[];
         isOpen: boolean;
-        updatePokemon: (pokemon: WithId<DbPartnerPokemon>) => void;
+        updatePokemon: (pokemon: DbPartnerPokemon) => void;
     };
 
     let { pokemon: pkmn, specie, moves, isOpen = $bindable(), updatePokemon }: Props = $props();
@@ -224,7 +224,7 @@
         {:else}
             <RankUpSummary
                 {stat}
-                {learnedMoves}
+                movesUpdates={[pkmn.moves, learnedMoves]}
                 attrUpdates={attributes.filter((attr) => attr.values[2] > 0)}
                 socialUpdates={socials.filter((attr) => attr.values[2] > 0)}
                 skillUpdates={skills.filter((attr) => attr.values[2] > 0)}
@@ -247,15 +247,15 @@
 
     <style>
         fieldset {
-            display: grid;
-            grid-template: auto 1fr / 1fr;
+            display: flex;
+            flex-direction: column;
             gap: var(--medium-gap);
-            margin-inline: var(--large-gap);
 
             & > legend {
                 font-size: larger;
                 font-weight: bold;
                 text-align: center;
+                text-indent: var(--medium-gap);
             }
 
             & > ul {
@@ -304,6 +304,7 @@
                 border-radius: 0;
                 width: 100%;
                 text-align: center;
+                padding-block: var(--small-gap);
                 background-color: var(--background-color);
 
                 &.selected {

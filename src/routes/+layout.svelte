@@ -1,25 +1,42 @@
 <script lang="ts">
-    import { setContext } from 'svelte';
+    import type { WithId } from 'mongodb';
+    import { onMount, setContext } from 'svelte';
     import { slide } from 'svelte/transition';
 
     import { dev } from '$app/environment';
     import t from '$lib/i18n/i18n.svelte';
 
+    import type { Box } from '$lib/types/box.js';
+    import { setTrainer } from '$lib/state/trainer.svelte.js';
+    import type { Trainer } from '$lib/types/mongo/trainer.js';
+    import { setBox, setBoxes } from '$lib/state/boxes.svelte.js';
+    import { GET_POKEMON_SPECIES_MOVES } from '$lib/constants/api.js';
+    import { type DbPartnerPokemon } from '$lib/types/mongo/pokemon.js';
+    import {
+        setMoves,
+        setPokemon,
+        setPokemonParty,
+        setSpecies,
+    } from '$lib/state/pokemon.svelte.js';
+
     import ItemListResult from '$lib/components/ItemListResult.svelte';
     import MoveListResult from '$lib/components/MoveListResult.svelte';
-    import NatureListResult from '$lib/components/NatureListResult.svelte';
-    import PokemonListResult from '$lib/components/PokemonListResult.svelte';
     import AbilityListResult from '$lib/components/AbilityListResult.svelte';
     import LangSwitcher from '$lib/components/lodestones/LangSwitcher.svelte';
+    import NatureListResult from '$lib/components/NatureListResult.svelte';
+    import PokemonListResult from '$lib/components/PokemonListResult.svelte';
+    import { getSavingState, getStorageOrDefault } from '$lib/state/storage.svelte.js';
+    import SaveStateIcon from '$lib/components/SaveStateIcon.svelte';
 
     let { children, data } = $props();
 
     setContext('natures', () => data.natures);
 
-    let isOpen: boolean = $state(false);
+    let debounce: NodeJS.Timeout | null;
+    let showSearch: boolean = $state(false);
+    let isSaving = $derived(getSavingState());
     let results: { name: string; results: any[] }[] = $state([] as any);
-    let debounce: number | null;
-
+    
     const mapCollectionToComponent = {
         Abilities: AbilityListResult,
         Items: ItemListResult,
@@ -39,6 +56,25 @@
             }
         }, 250);
     };
+
+    onMount(async () => {
+        const pokemonsData = getStorageOrDefault<DbPartnerPokemon[]>('team', []);
+        const pokemonsBoxes = getStorageOrDefault<Box[]>('boxes', []);
+        const pokemonTrainer = getStorageOrDefault<Trainer | null>('trainer', null);
+
+        const pokemonNames = pokemonsData.map((p) => p.specie).join(',');
+        const pokemonMoves = pokemonsData.flatMap((p) => p.moves).join(',');
+        const request = await fetch(`${GET_POKEMON_SPECIES_MOVES}?species=${pokemonNames}&moves=${pokemonMoves}`);
+        const { species, moves } = await request.json();
+
+        setBoxes(pokemonsBoxes);
+        setBox(pokemonsBoxes[0]);
+        setTrainer(pokemonTrainer);
+        setSpecies(species);
+        setPokemonParty(pokemonsData);
+        setMoves(moves);
+        setPokemon(pokemonsData[0]);
+    });
 </script>
 
 <header class="wrapper">
@@ -67,10 +103,15 @@
     <span></span>
     <nav>
         <li>
-            <button class="primary" onclick={() => (isOpen = !isOpen)}>🔍 {t('home.layout.action-search')}</button>
+            <SaveStateIcon {isSaving}></SaveStateIcon>
         </li>
         <li>
             <LangSwitcher></LangSwitcher>
+        </li>
+        <li>
+            <button class="primary" onclick={() => (showSearch = !showSearch)}
+                >🔍 {t('home.layout.action-search')}</button
+            >
         </li>
     </nav>
 </header>
@@ -79,7 +120,7 @@
     {@render children()}
 </main>
 
-{#if isOpen}
+{#if showSearch}
     <aside class="wrapper" data-title={t('home.layout.action-search')} transition:slide={{ duration: 250 }}>
         <input
             type="text"

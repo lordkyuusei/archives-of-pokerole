@@ -7,8 +7,8 @@
 
     type Props = {
         isOpen: boolean;
-        pokemon: WithId<DbPartnerPokemon>;
-        updatePokemon: (pokemon: WithId<DbPartnerPokemon>) => void;
+        pokemon: DbPartnerPokemon;
+        updatePokemon: (pokemon: DbPartnerPokemon) => void;
     };
 
     let { isOpen = $bindable(), pokemon, updatePokemon }: Props = $props();
