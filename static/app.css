@@ -93,6 +93,7 @@ ul {
 a,
 button {
     cursor: pointer;
+    text-wrap: nowrap;
 }
 
 a:link, a:visited {

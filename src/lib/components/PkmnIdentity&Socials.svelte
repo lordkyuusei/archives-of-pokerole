@@ -11,6 +11,7 @@
     import MovesList from './lodestones/pokemon/MovesList.svelte';
     import PartnerAttribute from './PartnerAttribute.svelte';
     import PokemonTypes from './PokemonTypes.svelte';
+    import { getIdFromName } from '$lib/functions/getIdFromName';
 
     let pokemon = $derived(getPokemon());
     let moves = $derived(getPkmnMoves());
@@ -53,8 +54,7 @@
             <ul class="socials">
                 {#each Object.entries(pokemon.socials) as [key, value]}
                     <li>
-                        <PartnerAttribute name={t(`character.attribute.${key}`)} {value} minValue={0} maxValue={5}
-                        ></PartnerAttribute>
+                        <PartnerAttribute name={t(`character.attribute.${key}`)} {value} minValue={0} maxValue={5}></PartnerAttribute>
                     </li>
                 {/each}
             </ul>
@@ -67,62 +67,48 @@
                         name={t('form.pokemon.Loyalty')}
                         value={pokemon.loyalty}
                         maxValue={5}
-                        onUpdate={(loyalty) => setPokemonProperty('loyalty', loyalty)}
-                    ></PartnerAttribute>
+                        onUpdate={(loyalty) => setPokemonProperty('loyalty', loyalty)}></PartnerAttribute>
                 </li>
                 <li>
                     <PartnerAttribute
                         name={t('form.pokemon.Happiness')}
                         value={pokemon.happiness}
                         maxValue={5}
-                        onUpdate={(happiness) => setPokemonProperty('happiness', happiness)}
-                    ></PartnerAttribute>
+                        onUpdate={(happiness) => setPokemonProperty('happiness', happiness)}></PartnerAttribute>
                 </li>
             </ul>
             <ul class="battle-wins">
                 <li>
                     <CharacterProperty name={t('form.pokemon.Battles')} value={pokemon.battles} large>
-                        <button
-                            class="secondary group"
-                            onclick={() => setPokemonProperty('battles', pokemon.battles - 1)}>-1</button
-                        >
-                        <button
-                            class="secondary group"
-                            onclick={() => setPokemonProperty('battles', pokemon.battles + 1)}>+1</button
-                        >
+                        <button class="secondary group" onclick={() => setPokemonProperty('battles', pokemon.battles - 1)}>-1</button>
+                        <button class="secondary group" onclick={() => setPokemonProperty('battles', pokemon.battles + 1)}>+1</button>
                     </CharacterProperty>
                 </li>
                 <li>
                     <CharacterProperty name={t('form.pokemon.Victories')} value={pokemon.victories} large>
-                        <button
-                            class="secondary group"
-                            onclick={() => setPokemonProperty('victories', pokemon.victories - 1)}>-1</button
-                        >
-                        <button
-                            class="secondary group"
-                            onclick={() => setPokemonProperty('victories', pokemon.victories + 1)}>+1</button
-                        >
+                        <button class="secondary group" onclick={() => setPokemonProperty('victories', pokemon.victories - 1)}>-1</button>
+                        <button class="secondary group" onclick={() => setPokemonProperty('victories', pokemon.victories + 1)}>+1</button>
                     </CharacterProperty>
                 </li>
             </ul>
             <ul class="nature-abilities">
                 <li>
-                    <CharacterProperty name={t('form.character.nature')} value="{pokemon.nature} ({confidence})"
-                    ></CharacterProperty>
+                    <CharacterProperty name={t('form.character.nature')} value="{pokemon.nature} ({confidence})"></CharacterProperty>
                 </li>
                 <li>
-                    <CharacterProperty
-                        name={t('form.pokemon.abilities')}
-                        value="{specie['Ability1']}{specie['Ability2'] !== '' ? ' / ' + specie['Ability2'] : ''}"
-                    ></CharacterProperty>
+                    <CharacterProperty name={t('form.pokemon.abilities')} value="">
+                        <a href="/abilities/{getIdFromName(specie['Ability1'])}" target="_blank">{specie['Ability1']}</a>
+                        {#if specie['Ability2'] !== ''}
+                            <a href="/abilities/{getIdFromName(specie['Ability2'])}" target="_blank">{specie['Ability2']}</a>
+                        {/if}
+                    </CharacterProperty>
                 </li>
             </ul>
             <textarea
                 class="notes"
                 placeholder={t('form.character.notes').replace('$1', pokemon.nickname)}
                 value={pokemon.notes}
-                oninput={({ currentTarget }) => setPokemonProperty('notes', currentTarget.value)}
-            ></textarea>
+                oninput={({ currentTarget }) => setPokemonProperty('notes', currentTarget.value)}></textarea>
         </div>
     {/if}
 
@@ -133,30 +119,14 @@
         <ul class="references">
             <li>
                 <CharacterProperty name={t('character.attribute.HitPoints')} value="{pokemon.hp} / {totalHp}" large>
-                    <button
-                        class="secondary group"
-                        onclick={() => setPokemonProperty('hp', Math.max(pokemon.hp - 1, 0))}>-1</button
-                    >
-                    <button
-                        class="secondary group"
-                        onclick={() => setPokemonProperty('hp', Math.min(pokemon.hp + 1, totalHp))}>+1</button
-                    >
+                    <button class="secondary group" onclick={() => setPokemonProperty('hp', Math.max(pokemon.hp - 1, 0))}>-1</button>
+                    <button class="secondary group" onclick={() => setPokemonProperty('hp', Math.min(pokemon.hp + 1, totalHp))}>+1</button>
                 </CharacterProperty>
             </li>
             <li>
-                <CharacterProperty
-                    name={t('character.attribute.WillPoints')}
-                    value="{pokemon.will} / {pokemon.attributes['Insight'] + 2}"
-                    large
-                >
-                    <button
-                        class="secondary group"
-                        onclick={() => setPokemonProperty('will', Math.max(pokemon.will - 1, 0))}>-1</button
-                    >
-                    <button
-                        class="secondary group"
-                        onclick={() => setPokemonProperty('will', Math.max(pokemon.will - 1, totalWp))}>+1</button
-                    >
+                <CharacterProperty name={t('character.attribute.WillPoints')} value="{pokemon.will} / {pokemon.attributes['Insight'] + 2}" large>
+                    <button class="secondary group" onclick={() => setPokemonProperty('will', Math.max(pokemon.will - 1, 0))}>-1</button>
+                    <button class="secondary group" onclick={() => setPokemonProperty('will', Math.max(pokemon.will - 1, totalWp))}>+1</button>
                 </CharacterProperty>
             </li>
             <li>
@@ -165,8 +135,7 @@
                         type="text"
                         id="Item"
                         value={pokemon.heldItem}
-                        onchange={({ currentTarget }) => setPokemonProperty('heldItem', currentTarget.value)}
-                    />
+                        onchange={({ currentTarget }) => setPokemonProperty('heldItem', currentTarget.value)} />
                 </CharacterProperty>
             </li>
             <li>
@@ -174,8 +143,7 @@
                     <select
                         id="Status"
                         value={pokemon.status}
-                        onchange={({ currentTarget }) => setPokemonProperty('status', currentTarget.value as Ailment)}
-                    >
+                        onchange={({ currentTarget }) => setPokemonProperty('status', currentTarget.value as Ailment)}>
                         {#each AILMENTS as ailment}
                             <option value={ailment}>{t(`pokemon.ailment.${ailment}`)}</option>
                         {/each}
@@ -185,44 +153,29 @@
             <li>
                 <CharacterProperty
                     name={t('pokemon.attribute.initiative')}
-                    value="1D6 + {Math.max(
-                        0,
-                        pokemon.attributes['Dexterity'] + ailmentDexModifier + pokemon.skills['Alert'],
-                    )}"
-                ></CharacterProperty>
+                    value="1D6 + {Math.max(0, pokemon.attributes['Dexterity'] + ailmentDexModifier + pokemon.skills['Alert'])}"></CharacterProperty>
             </li>
             <li>
                 <CharacterProperty
                     name={t('pokemon.attribute.defense')}
-                    value="Ph: {pokemon.attributes['Vitality']} / Sp: {pokemon.attributes['Insight']}"
-                ></CharacterProperty>
+                    value="Ph: {pokemon.attributes['Vitality']} / Sp: {pokemon.attributes['Insight']}"></CharacterProperty>
             </li>
             <li>
                 <CharacterProperty
                     name={t('pokemon.attribute.evasion')}
-                    value="{Math.max(
-                        0,
-                        pokemon.skills['Evasion'] + pokemon.attributes['Dexterity'] + ailmentDexModifier,
-                    )}D6"
-                ></CharacterProperty>
+                    value="{Math.max(0, pokemon.skills['Evasion'] + pokemon.attributes['Dexterity'] + ailmentDexModifier)}D6"></CharacterProperty>
             </li>
             <li>
                 <CharacterProperty
                     name={t('pokemon.attribute.clash')}
-                    value="Ph: {pokemon.skills['Clash'] + pokemon.attributes['Strength']}D6 / Sp: {pokemon.skills[
-                        'Clash'
-                    ] + pokemon.attributes['Special']}D6"
-                ></CharacterProperty>
+                    value="Ph: {pokemon.skills['Clash'] + pokemon.attributes['Strength']}D6 / Sp: {pokemon.skills['Clash'] +
+                        pokemon.attributes['Special']}D6"></CharacterProperty>
             </li>
             <li>
                 <CharacterProperty name={t('form.character.rank')} value={pokemon.rank}></CharacterProperty>
             </li>
             <li>
-                <CharacterProperty
-                    name=" "
-                    value={t(`form.${movesViewToggle ? 'character.socials' : 'pokemon.moveset'}`)}
-                    large
-                >
+                <CharacterProperty name=" " value={t(`form.${movesViewToggle ? 'character.socials' : 'pokemon.moveset'}`)} large>
                     <Toggle bind:toggled={movesViewToggle}></Toggle>
                 </CharacterProperty>
             </li>

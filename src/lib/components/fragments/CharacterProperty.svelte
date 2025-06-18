@@ -13,7 +13,7 @@
     <label for={name}>{name}</label>
     {#if value !== null && value !== undefined}
         <output id={name} {name}>
-            <span>
+            <span class:hidden={value === ""}>
                 {value}
             </span>
             {#if children}
@@ -64,6 +64,10 @@
             color: var(--text-color);
             background-color: var(--background-color);
             position: relative;
+
+            & > span.hidden {
+                display: none;
+            }
         }
         
         &.large {

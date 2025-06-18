@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
     import type { PageProps } from './$types';
 
     import t from '$lib/i18n/i18n.svelte';
@@ -10,8 +11,6 @@
     import GeneratePokemonForm from '$lib/components/forms/GeneratePokemonForm.svelte';
     import type { DbPartnerPokemon } from '$lib/types/mongo/pokemon';
     import { addPokemonToParty } from '$lib/state/pokemon.svelte';
-    import { goto } from '$app/navigation';
-    import { redirect } from '@sveltejs/kit';
 
     let { data }: PageProps = $props();
     let { pokemon, moves } = data;
