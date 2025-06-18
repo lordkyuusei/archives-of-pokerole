@@ -40,14 +40,13 @@
         } else if (learnableAmount > 0) {
             learnedMoves = [...learnedMoves, move['_id']];
         }
+
         return true;
     };
-
-    $inspect(learnableMoves);
 </script>
 
 <rank-up-moveset>
-    <h2>{t('form.training.new-moveset')} {learnableAmount}</h2>
+    <h2>{t('form.training.new-moveset')} {learnableAmount} ({t('character.attribute.Insight')}: +{insightIncrease})</h2>
     {#if canLearnNewMoves}
         <div class="form-content">
             <MovesList pokemon={specie} moves={learnableMoves} {onMoveSelection}></MovesList>

@@ -21,7 +21,11 @@ export const getSpecies = () => species;
 export const getMoves = () => moves;
 export const getPkmnMoves = () => pkmnMoves;
 
-export const setPokemon = (newPokemon: DbPartnerPokemon | null) => {
+export const setSelectedPokemon = (newPokemon: DbPartnerPokemon | null) => {
+    pokemon = newPokemon;
+}
+
+export const setPokemon = (newPokemon: DbPartnerPokemon) => {
     pokemon = newPokemon;
     if (!pokemon) return;
 

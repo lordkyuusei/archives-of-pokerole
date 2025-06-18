@@ -20,6 +20,7 @@
         setPokemon,
         setPokemonParty,
         setPokemonProperty,
+        setSelectedPokemon,
         setSpecie,
         updatePokemonInParty,
     } from '$lib/state/pokemon.svelte';
@@ -174,19 +175,24 @@
         {#if box !== null}
             {#if pokemonInBox.length === 0}
                 <p>{t('home.pokemon.error-no-team')}</p>
+            {:else}
+                <ul>
+                    {#each pokemonInBox as pkmn}
+                        <li>
+                            <button
+                                draggable="true"
+                                class="partner secondary"
+                                class:selected={pkmn === pokemon}
+                                onclick={() => setSelectedPokemon(pkmn)}
+                                ondragstart={(event) => onPokemonDragStartHandle(event, pkmn)}
+                                ondragend={(event) => onPokemonDragEndHandle(event)}
+                                style:--url="url('{SPRITE_PICTURE_URL}{pkmn.specie[1]}.png')">
+                                {pkmn.nickname}
+                            </button>
+                        </li>
+                    {/each}
+                </ul>
             {/if}
-            {#each pokemonInBox as pkmn}
-                <button
-                    draggable="true"
-                    class="partner secondary"
-                    class:selected={pkmn === pokemon}
-                    onclick={() => setPokemon(pkmn)}
-                    ondragstart={(event) => onPokemonDragStartHandle(event, pkmn)}
-                    ondragend={(event) => onPokemonDragEndHandle(event)}
-                    style:--url="url('{SPRITE_PICTURE_URL}{pkmn.specie[1]}.png')">
-                    {pkmn.nickname}
-                </button>
-            {/each}
             <BoxesList {updatePokemonList} {setCurrentBox}></BoxesList>
         {/if}
     </pkmn-list>
@@ -210,7 +216,7 @@
         {#if pokemon && specie}
             <pkmn-infos
                 class="wrapper"
-                data-title={pokemon.specie[0]}
+                data-title="{pokemon.specie[0]} {pokemon.shiny ? ' ✨' : ''}"
                 style:--url="url('{pokemon.shiny ? SHINY_PICTURE_URL : DEFAULT_PICTURE_URL}/{pokemon.specie[1]}.png')">
                 <a href="/pokemon/{specie._id}"><button>{t('home.pokemon.action-check-pokedex')}</button></a>
                 <input type="text" value={pokemon.nickname} oninput={({ currentTarget }) => setPokemonProperty('nickname', currentTarget.value)} />
@@ -269,25 +275,35 @@
         gap: var(--large-gap);
 
         & > pkmn-list {
-            grid-area: 'pkmn-list';
-
-            display: flex;
+            grid-area: pkmn-list;
+            display: grid;
+            grid-template-columns: 1fr auto;
             gap: var(--large-gap);
             align-items: center;
 
-            & > button.partner {
-                align-content: center;
+            & > ul {
+                display: flex;
+                gap: var(--large-gap);
                 align-items: center;
-                text-transform: capitalize;
-                background-image: var(--url);
-                background-position: bottom right;
-                background-blend-mode: luminosity;
-                background-repeat: no-repeat;
+                overflow-x: auto;
 
-                &.selected {
-                    background-color: var(--text-color);
-                    color: var(--background-second-color);
-                    border-color: var(--background-color);
+                & > li {
+                    & > button.partner {
+                        align-content: center;
+                        align-items: center;
+                        text-transform: capitalize;
+                        text-wrap: nowrap;
+                        background-image: var(--url);
+                        background-position: bottom right;
+                        background-blend-mode: luminosity;
+                        background-repeat: no-repeat;
+
+                        &.selected {
+                            background-color: var(--text-color);
+                            color: var(--background-second-color);
+                            border-color: var(--background-color);
+                        }
+                    }
                 }
             }
         }
