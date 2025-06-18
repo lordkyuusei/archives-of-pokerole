@@ -3,6 +3,23 @@ import { PokemonSkills } from "$lib/constants/skills";
 import type { DbPokemon, DbPokemonMove } from "$lib/types/mongo/pokemon";
 import type { WithId } from "mongodb";
 import { getLearnableMoves } from "./getLearnableMoves";
+import { pokemonRankOrder } from "$lib/constants/pokemonRank";
+
+export const findLowestRankPossible = (pokemon: WithId<DbPokemon>[]) => {
+    const movesRankPerPokemon = pokemon.map(p => p.Moves.flatMap(m => m.Learned).sort((a, z) => {
+        const aRank = pokemonRankOrder[a];
+        const bRank = pokemonRankOrder[z];
+
+        return aRank - bRank;
+    })[0]);
+
+    return movesRankPerPokemon.sort((a, z) => {
+        const aRank = pokemonRankOrder[a];
+        const bRank = pokemonRankOrder[z];
+
+        return bRank - aRank;
+    })[0];
+}
 
 export const generatePokemon = (pokemon: WithId<DbPokemon>, rank: number, nature: string, boxId: string) => {
     const successiveRankUps = rankUpSettings.slice(0, rank + 1);
@@ -10,6 +27,8 @@ export const generatePokemon = (pokemon: WithId<DbPokemon>, rank: number, nature
     const socIncrease = successiveRankUps.reduce((acc, rankup) => acc + rankup.config.socialPoints, 0);
     const skillIncrease = successiveRankUps.map((rankup) => rankup.config.skillPoints);
 
+    console.log(`Generating a ${rankUpSettings[rank].to} ${pokemon.Name}`);
+    console.log({... pokemon })
     const attrReferences = [
         [pokemon.Strength, pokemon.MaxStrength],
         [pokemon.Dexterity, pokemon.MaxDexterity],
@@ -18,11 +37,12 @@ export const generatePokemon = (pokemon: WithId<DbPokemon>, rank: number, nature
         [pokemon.Insight, pokemon.MaxInsight],
     ];
 
-    console.log(`Generating a ${rankUpSettings[rank].to} ${pokemon.Name}`);
     let attributes = Array.from({ length: 5 }, (_, i) => attrReferences[i][0]);
     let remainingAttr = attrIncrease;
 
-    while (remainingAttr > 0) {
+    console.log(`Stats: ${attrReferences.join(', ')}. Points: ${remainingAttr}`);
+
+    while (!pokemon.Legendary && remainingAttr > 0) {
         const randomIndex = Math.floor(Math.random() * 5);
         if (attributes[randomIndex] < attrReferences[randomIndex][1]) {
             attributes[randomIndex]++;

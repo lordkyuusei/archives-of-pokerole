@@ -23,8 +23,9 @@ export const actions = {
         const ranks = dataAsArray.filter(([key, _]) => key.startsWith('rank-')).map(([_, value]) => value as string);
         const isEvolved = data.get('stage') === 'on';
         const isStarted = data.get('starter') === 'on';
+        const isLegendary = data.get('legendary') === 'on';
 
-        const results = await generatePokemon(types, ranks, isEvolved, isStarted);
+        const results = await generatePokemon(types, ranks, isEvolved, isStarted, isLegendary);
 
         return { success: true, message: "OK", results: results };
     }

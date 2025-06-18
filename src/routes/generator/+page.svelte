@@ -1,34 +1,42 @@
 <script lang="ts">
-    import POKEMON_TYPES from '$lib/constants/pokemonTypes';
-    import type { PageProps } from './$types';
-
-    import { pokemonRankOrder } from '$lib/constants/pokemonRank';
-    import t from '$lib/i18n/i18n.svelte';
-    import { getLang, type Lang } from '$lib/i18n/lang.svelte';
-
     import { enhance } from '$app/forms';
+    import { goto } from '$app/navigation';
+    import { fly, slide } from 'svelte/transition';
+    
     import Toggle from '$lib/components/fragments/Toggle.svelte';
     import PokemonTypes from '$lib/components/PokemonTypes.svelte';
+
+    import { pokemonRankOrder } from '$lib/constants/pokemonRank';
+    import POKEMON_TYPES from '$lib/constants/pokemonTypes';
     import { rankUpSettings } from '$lib/constants/rankUpConfigs';
     import { SPRITE_PICTURE_URL } from '$lib/constants/urls';
     import { convertPokemonToPartner } from '$lib/functions/convertPokemonToPartner';
-    import { generatePokemon } from '$lib/functions/generatePokemon';
+    import { findLowestRankPossible, generatePokemon } from '$lib/functions/generatePokemon';
+    import t from '$lib/i18n/i18n.svelte';
+    import { getLang, type Lang } from '$lib/i18n/lang.svelte';
     import { getBoxes } from '$lib/state/boxes.svelte';
     import { addPokemonToParty } from '$lib/state/pokemon.svelte';
     import type { DbPokemonRank } from '$lib/types/mongo/pokemon';
-    import { goto } from '$app/navigation';
-
+    import type { PageProps } from './$types';
+    
     let { form, data }: PageProps = $props();
 
     let boxes = $derived(getBoxes());
     let currentLang: Lang = $derived(getLang());
+    let results = $derived(form?.results || []);
 
     let nbrTypesFilter: number = $state(1);
     let selectedNames: string[] = $state([]);
     let isAllChecked: boolean = $state(false);
     let isRange: boolean = $state(false);
 
-    const allowedRanks = Object.keys(pokemonRankOrder).splice(1) as DbPokemonRank[];
+    let allowedRanks = $derived.by(() => {
+        if (!form?.results || !selectedNames.length) return Object.keys(pokemonRankOrder).splice(1) as DbPokemonRank[];
+
+        const pokemons = form.results.filter(p => selectedNames.includes(p["_id"].toString()));
+        const lowestRank = findLowestRankPossible(pokemons);
+        return Object.keys(pokemonRankOrder).splice(pokemonRankOrder[lowestRank]) as DbPokemonRank[]
+    });
 
     const generatePokemons = (event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) => {
         event.preventDefault();
@@ -37,19 +45,28 @@
         const rank1 = (elements.namedItem('rank-1') as HTMLSelectElement).value as DbPokemonRank;
         const rank2 = (elements.namedItem('rank-2') as HTMLSelectElement).value as DbPokemonRank;
         const boxId = (elements.namedItem('box-id') as HTMLSelectElement).value;
+        const isRange = (elements.namedItem('rank-range') as HTMLInputElement).checked;
 
         const rank1Boundary = rankUpSettings.findIndex((r) => r.to === rank1);
         const rank2Boundary = rankUpSettings.findIndex((r) => r.to === rank2);
-        if (rank1Boundary === -1 || rank2Boundary === -1) return;
+        if (rank1Boundary === -1 || (isRange && rank2Boundary === -1)) return;
 
         const generatedPokemons = selectedNames.map((name) => {
             const pokemon = form?.results.find((p) => p._id.toString() === name);
             if (!pokemon) return { pokemon: null, rawPokemonData: null };
 
-            const randomRank = Math.floor(Math.random() * (Math.abs(rank1Boundary - rank2Boundary) + 1)) + Math.min(rank1Boundary, rank2Boundary);
             const randomNature = data.natures[Math.floor(Math.random() * data.natures.length)].Nature.split(' ')[0];
 
-            return generatePokemon(pokemon, randomRank, randomNature, boxId);
+            if (isRange) {
+                const randomRank = Math.floor(Math.random() * (Math.abs(rank1Boundary - rank2Boundary) + 1)) + Math.min(rank1Boundary, rank2Boundary);
+                return generatePokemon(pokemon, randomRank, randomNature, boxId);
+            } else {
+                const rankSettingIndex = rankUpSettings.findIndex((r) => r.to === rank1);
+                if (rankSettingIndex === -1) return;
+
+                return generatePokemon(pokemon, rankSettingIndex, randomNature, boxId);
+            }
+
         });
 
         generatedPokemons.forEach(({ pokemon, rawPokemonData }) => {
@@ -106,36 +123,46 @@
                 <Toggle name="stage" toggled={false}></Toggle>
                 <label for="starter">Pokémon starter ?</label>
                 <Toggle name="starter" toggled={false}></Toggle>
+                <label for="legendary">Légendaire ?</label>
+                <Toggle name="legendary" toggled={false}></Toggle>
             </fieldset>
         </div>
         <button type="submit">{t('form.generator.generate')}</button>
     </form>
 
     <output class="wrapper" data-title={t('form.generator.output')}>
-        {#if form?.success}
-            <ul>
-                <li>
-                    <span> Sprite </span>
-                    <span> N° </span>
-                    <span> Nom </span>
-                    <span> Type(s) </span>
-                    <input type="checkbox" bind:checked={isAllChecked} oninput={() => toggleCheckAll()} />
-                </li>
-                {#each form.results as pokemon, i (pokemon["_id"])}
-                    <li>
+        <ul class:results={form?.success}>
+            <li>
+                <span> Sprite </span>
+                <span> N° </span>
+                <span> Nom </span>
+                <span> Type(s) </span>
+                <input type="checkbox" bind:checked={isAllChecked} oninput={() => toggleCheckAll()} />
+            </li>
+            {#if form?.success}
+                {#each results as pokemon, i (pokemon['_id'])}
+                    <li in:fly|global={{ delay: 75 * i}}>
                         <img class="sprite" src="{SPRITE_PICTURE_URL}{pokemon['Number']}.png" alt={pokemon['Name']} />
                         <h3>#{pokemon['Number']}</h3>
                         <h2 title={pokemon['I18n'][currentLang]}>
                             <a href="/pokemon/{pokemon['_id']}" target="_blank" class="link"> {pokemon['I18n'][currentLang]}</a>
                         </h2>
                         <p>
-                            <PokemonTypes types={[pokemon['Type1'], pokemon['Type2']]} helperPosition={i > form.results.length / 2 ? 'top' : 'bottom'}></PokemonTypes>
+                            <PokemonTypes types={[pokemon['Type1'], pokemon['Type2']]} helperPosition={i >= form.results.length / 2 ? 'top' : 'bottom'}
+                            ></PokemonTypes>
                         </p>
                         <input type="checkbox" bind:group={selectedNames} value={pokemon['_id'].toString()} />
                     </li>
                 {/each}
-            </ul>
-        {/if}
+            {:else}
+                <li>
+                    <p>🗒️{t('form.generator.tutorial')}</p>
+                </li>
+                <li>
+                    <p>❗{t('form.generator.generation-info')}</p>
+                </li>
+            {/if}
+        </ul>
     </output>
 
     <div class="wrapper" data-title={t('form.pokemon.actions')}>
@@ -143,7 +170,7 @@
             <div>
                 <fieldset disabled={!selectedNames.length}>
                     <legend>Rang</legend>
-                    <label for="rank-1">{isRange ? "Entre le rang" : "Rang"}</label>
+                    <label for="rank-1">{isRange ? 'Entre le rang' : 'Rang'}</label>
                     <select id="rank-1" name="rank-1">
                         {#each allowedRanks as rank}
                             <option value={rank}>{rank}</option>
@@ -232,8 +259,20 @@
             & > ul {
                 display: flex;
                 flex-direction: column;
-                justify-content: space-between;
                 height: 100%;
+
+                &.results {
+                    justify-content: space-between;
+                }
+
+                &:not(.results) {
+                    gap: var(--medium-gap);
+
+                    & > li p {
+                        grid-column: 1 / -1;
+                    }
+                }
+
 
                 & > li {
                     display: grid;

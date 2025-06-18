@@ -44,10 +44,14 @@ const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTran
     })
 }
 
-export const generatePokemon = async (types: string[], ranks: string[], isEvolved: boolean, isStarter: boolean): Promise<WithId<DbPokemon>[]> => {
-    const query: any = {
-        $or: [{ Type1: { $in: types } }, { Type2: { $in: types } }],
-    };
+export const generatePokemon = async (types: string[], ranks: string[], isEvolved: boolean, isStarter: boolean, isLegendary: boolean): Promise<WithId<DbPokemon>[]> => {
+    let query: any = {};
+
+    if (types.length !== 1 && types[0] !== "Typeless") {
+        query = {
+            $or: [{ Type1: { $in: types } }, { Type2: { $in: types } }],
+        };
+    }
 
     if (isEvolved) {
         query["Evolutions.From"] = { $exists: true };
@@ -55,6 +59,10 @@ export const generatePokemon = async (types: string[], ranks: string[], isEvolve
 
     if (isStarter) {
         query.GoodStarter = true;
+    }
+
+    if (isLegendary) {
+        query.Legendary = true;
     }
 
     const collection = mongo.collection<DbPokemon>("Pokedex");

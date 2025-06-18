@@ -1,15 +1,15 @@
 <script lang="ts">
     import type { WithId } from 'mongodb';
+    import { getContext } from 'svelte';
 
     import { pokemonRankOrder } from '$lib/constants/pokemonRank';
     import { rankUpSettings } from '$lib/constants/rankUpConfigs';
     import { convertPokemonToPartner } from '$lib/functions/convertPokemonToPartner';
-    import { generatePokemon } from '$lib/functions/generatePokemon';
+    import { findLowestRankPossible, generatePokemon } from '$lib/functions/generatePokemon';
     import t from '$lib/i18n/i18n.svelte';
     import { getBoxes } from '$lib/state/boxes.svelte';
     import type { DbNature } from '$lib/types/mongo/nature';
     import type { DbPartnerPokemon, DbPokemon, DbPokemonRank } from '$lib/types/mongo/pokemon';
-    import { getContext } from 'svelte';
     import Dialog from '../fragments/Dialog.svelte';
 
     type Props = {
@@ -19,9 +19,11 @@
     };
 
     let { pokemon, isOpen = $bindable(), onPokemonGenerated }: Props = $props();
-
     let boxes = $derived(getBoxes());
+
     const natures = (getContext<DbNature[]>('natures') as unknown as () => DbNature[])();
+    const minimumRank = findLowestRankPossible([pokemon]);
+    const allowedRanks = Object.keys(pokemonRankOrder).slice(pokemonRankOrder[minimumRank]);
 
     const generatePokemonForm = (event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) => {
         event.preventDefault();
@@ -50,7 +52,7 @@
                 <legend>Rang</legend>
                 <label for="rank">Rang du Pokémon</label>
                 <select id="rank" name="rank">
-                    {#each Object.keys(pokemonRankOrder) as rank}
+                    {#each allowedRanks as rank}
                         <option value={rank}>{rank}</option>
                     {/each}
                 </select>
