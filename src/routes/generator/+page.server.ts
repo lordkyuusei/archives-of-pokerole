@@ -1,3 +1,4 @@
+import type { ThreegleState } from "$lib/constants/threegle";
 import { generatePokemon } from "$lib/server/database/functions";
 import type { Actions } from "@sveltejs/kit";
 
@@ -19,11 +20,12 @@ export const actions = {
 
         const dataAsArray = [...data.entries()];
 
+        console.log(dataAsArray);
         const types = dataAsArray.filter(([key, _]) => key.startsWith('type-')).map(([_, value]) => value as string);
         const ranks = dataAsArray.filter(([key, _]) => key.startsWith('rank-')).map(([_, value]) => value as string);
-        const isEvolved = data.get('stage') === 'on';
-        const isStarted = data.get('starter') === 'on';
-        const isLegendary = data.get('legendary') === 'on';
+        const isEvolved = Number(data.get('stage')?.toString()) as ThreegleState;
+        const isStarted = Number(data.get('starter')?.toString()) as ThreegleState;
+        const isLegendary = Number(data.get('legendary')?.toString()) as ThreegleState;
 
         const results = await generatePokemon(types, ranks, isEvolved, isStarted, isLegendary);
 

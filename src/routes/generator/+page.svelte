@@ -18,6 +18,7 @@
     import { addPokemonToParty } from '$lib/state/pokemon.svelte';
     import type { DbPokemonRank } from '$lib/types/mongo/pokemon';
     import type { PageProps } from './$types';
+    import Threeggle from '$lib/components/fragments/Threeggle.svelte';
     
     let { form, data }: PageProps = $props();
 
@@ -120,11 +121,11 @@
             <fieldset>
                 <legend>Stade</legend>
                 <label for="stage">Evolué ?</label>
-                <Toggle name="stage" toggled={false}></Toggle>
+                <Threeggle name="stage"></Threeggle>
                 <label for="starter">Pokémon starter ?</label>
-                <Toggle name="starter" toggled={false}></Toggle>
+                <Threeggle name="starter"></Threeggle>
                 <label for="legendary">Légendaire ?</label>
-                <Toggle name="legendary" toggled={false}></Toggle>
+                <Threeggle name="legendary"></Threeggle>
             </fieldset>
         </div>
         <button type="submit">{t('form.generator.generate')}</button>

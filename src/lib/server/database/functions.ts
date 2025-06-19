@@ -4,6 +4,7 @@ import type { DbMove } from "$lib/types/mongo/move";
 import type { DbNature } from "$lib/types/mongo/nature";
 import type { DbAbility } from "$lib/types/mongo/ability";
 import { type DbPokemon, type DbPokemonMove } from "$lib/types/mongo/pokemon";
+import { ThreegleState } from "$lib/constants/threegle";
 
 const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTranslations: any[]) => {
     const getFrenchMegaWord = (id: number) => {
@@ -44,25 +45,25 @@ const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTran
     })
 }
 
-export const generatePokemon = async (types: string[], ranks: string[], isEvolved: boolean, isStarter: boolean, isLegendary: boolean): Promise<WithId<DbPokemon>[]> => {
+export const generatePokemon = async (types: string[], ranks: string[], isEvolved: ThreegleState, isStarter: ThreegleState, isLegendary: ThreegleState): Promise<WithId<DbPokemon>[]> => {
     let query: any = {};
 
-    if (types.length !== 1 && types[0] !== "Typeless") {
+    if (types[0] !== "Typeless") {
         query = {
             $or: [{ Type1: { $in: types } }, { Type2: { $in: types } }],
         };
     }
 
-    if (isEvolved) {
-        query["Evolutions.From"] = { $exists: true };
+    if (isEvolved !== ThreegleState.NA) {
+        query["Evolutions.From"] = { $exists: isEvolved === ThreegleState.ON };        
     }
 
-    if (isStarter) {
-        query.GoodStarter = true;
+    if (isStarter !== ThreegleState.NA) {
+        query.GoodStarter = isStarter === ThreegleState.ON;        
     }
 
-    if (isLegendary) {
-        query.Legendary = true;
+    if (isLegendary !== ThreegleState.NA) {
+        query.Legendary = isLegendary === ThreegleState.ON;        
     }
 
     const collection = mongo.collection<DbPokemon>("Pokedex");
