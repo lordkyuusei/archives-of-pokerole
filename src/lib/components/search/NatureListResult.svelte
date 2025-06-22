@@ -1,9 +1,19 @@
 <script lang="ts">
-    let { value } = $props();
+    import type { WithId } from "mongodb";
+    import type { DbNature } from "$lib/types/mongo/nature";
+
+    type Props = {
+        showSearch?: boolean;
+        keys: (keyof DbNature)[];
+        value: WithId<DbNature>;
+    };
+    let { showSearch = $bindable(), keys, value }: Props = $props();
+
+    const closeSearch = () => (showSearch = false);
 </script>
 
 <li>
-    <a href="/nature/{value['_id']}">
+    <a href="/natures/{value['_id']}" data-sveltekit-reload onclick={closeSearch}>
         <span class="name">
             {value['Name']}
         </span>
@@ -17,7 +27,7 @@
     li {
         padding: var(--medium-gap);
         border-radius: var(--medium-gap);
-        
+
         & > a {
             display: grid;
             grid-auto-flow: column;

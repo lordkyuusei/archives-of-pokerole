@@ -1,10 +1,11 @@
-import type { WithId } from "mongodb";
-import { mongo, mongoDex } from "./mongodb";
+import { ThreegleState } from "$lib/constants/threegle";
+import type { DbAbility } from "$lib/types/mongo/ability";
+import { type DbItem } from "$lib/types/mongo/item";
 import type { DbMove } from "$lib/types/mongo/move";
 import type { DbNature } from "$lib/types/mongo/nature";
-import type { DbAbility } from "$lib/types/mongo/ability";
-import { type DbPokemon, type DbPokemonMove } from "$lib/types/mongo/pokemon";
-import { ThreegleState } from "$lib/constants/threegle";
+import { type DbPokemon } from "$lib/types/mongo/pokemon";
+import type { WithId } from "mongodb";
+import { mongo } from "./mongodb";
 
 const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTranslations: any[]) => {
     const getFrenchMegaWord = (id: number) => {
@@ -55,15 +56,17 @@ export const generatePokemon = async (types: string[], ranks: string[], isEvolve
     }
 
     if (isEvolved !== ThreegleState.NA) {
-        query["Evolutions.From"] = { $exists: isEvolved === ThreegleState.ON };        
+        query["Evolutions.From"] = { $exists: isEvolved === ThreegleState.ON };
+        /* Prevent Evolutions.Kind to be either Mega or Special.*/
+        query["Evolutions.Kind"] = { $nin: ['Mega', 'Special', 'Form'] };
     }
 
     if (isStarter !== ThreegleState.NA) {
-        query.GoodStarter = isStarter === ThreegleState.ON;        
+        query.GoodStarter = isStarter === ThreegleState.ON;
     }
 
     if (isLegendary !== ThreegleState.NA) {
-        query.Legendary = isLegendary === ThreegleState.ON;        
+        query.Legendary = isLegendary === ThreegleState.ON;
     }
 
     const collection = mongo.collection<DbPokemon>("Pokedex");
@@ -128,6 +131,9 @@ export const findMultInDatabase = async (searchArray: string[], collection: stri
 export const getNaturesFromDb = async () =>
     await mongo.collection<DbNature>("Natures").find().toArray();
 
+export const getAllItemsFromDb = async () =>
+    await mongo.collection<DbItem>("Items").find().toArray();
+
 export const getAllPokemonFromDb = async () =>
     await mongo.collection<DbPokemon>("Pokedex").find({ DexID: { $not: /[(FM)]/ } }, { projection: { _id: 1, Name: 1, Number: 1, DexID: 1, I18n: 1 } }).sort({ DexID: 1 }).toArray();
 
@@ -139,6 +145,9 @@ export const getPokemonFromDb = async (pokemon: string) =>
 
 export const getMoveFromDb = async (move: string) =>
     await mongo.collection<DbMove>("Moves").findOne({ _id: move });
+
+export const getItemFromDb = async (item: string) =>
+    await mongo.collection<DbItem>("Items").findOne({ _id: item });
 
 export const getLearnersFromDb = async (move: DbMove) =>
     await mongo.collection<DbPokemon>("Pokedex").find({ "Moves.Name": move.Name }).toArray();

@@ -1,11 +1,12 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { goto } from '$app/navigation';
-    import { fly, slide } from 'svelte/transition';
-    
+    import { fly } from 'svelte/transition';
+
     import Toggle from '$lib/components/fragments/Toggle.svelte';
     import PokemonTypes from '$lib/components/PokemonTypes.svelte';
 
+    import Threeggle from '$lib/components/fragments/Threeggle.svelte';
     import { pokemonRankOrder } from '$lib/constants/pokemonRank';
     import POKEMON_TYPES from '$lib/constants/pokemonTypes';
     import { rankUpSettings } from '$lib/constants/rankUpConfigs';
@@ -18,8 +19,7 @@
     import { addPokemonToParty } from '$lib/state/pokemon.svelte';
     import type { DbPokemonRank } from '$lib/types/mongo/pokemon';
     import type { PageProps } from './$types';
-    import Threeggle from '$lib/components/fragments/Threeggle.svelte';
-    
+
     let { form, data }: PageProps = $props();
 
     let boxes = $derived(getBoxes());
@@ -30,15 +30,9 @@
     let selectedNames: string[] = $state([]);
     let isAllChecked: boolean = $state(false);
     let isRange: boolean = $state(false);
+    let allowedRanks: string[] = $state(Object.keys(pokemonRankOrder).splice(1));
 
-    let allowedRanks = $derived.by(() => {
-        if (!form?.results || !selectedNames.length) return Object.keys(pokemonRankOrder).splice(1) as DbPokemonRank[];
-
-        const pokemons = form.results.filter(p => selectedNames.includes(p["_id"].toString()));
-        const lowestRank = findLowestRankPossible(pokemons);
-        return Object.keys(pokemonRankOrder).splice(pokemonRankOrder[lowestRank]) as DbPokemonRank[]
-    });
-
+    $inspect(form?.results)
     const generatePokemons = (event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) => {
         event.preventDefault();
         const { elements } = event.currentTarget;
@@ -57,17 +51,20 @@
             if (!pokemon) return { pokemon: null, rawPokemonData: null };
 
             const randomNature = data.natures[Math.floor(Math.random() * data.natures.length)].Nature.split(' ')[0];
+            const lowestRank = findLowestRankPossible([pokemon]);
+            const nonNegociableLowerBoundary = pokemonRankOrder[lowestRank];
 
             if (isRange) {
-                const randomRank = Math.floor(Math.random() * (Math.abs(rank1Boundary - rank2Boundary) + 1)) + Math.min(rank1Boundary, rank2Boundary);
+                const randomRank =
+                    Math.floor(Math.random() * (Math.abs(nonNegociableLowerBoundary - rank2Boundary) + 1)) +
+                    Math.min(nonNegociableLowerBoundary, rank2Boundary);
                 return generatePokemon(pokemon, randomRank, randomNature, boxId);
             } else {
-                const rankSettingIndex = rankUpSettings.findIndex((r) => r.to === rank1);
+                const rankSettingIndex = rankUpSettings.findIndex((r) => r.to === lowestRank);
                 if (rankSettingIndex === -1) return;
 
                 return generatePokemon(pokemon, rankSettingIndex, randomNature, boxId);
             }
-
         });
 
         generatedPokemons.forEach(({ pokemon, rawPokemonData }) => {
@@ -112,11 +109,9 @@
                 <button onclick={() => nbrTypesFilter++} type="button">
                     {t('form.generator.add-type')}
                 </button>
-                {#if nbrTypesFilter > 1}
-                    <button onclick={() => nbrTypesFilter--} type="button">
-                        {t('form.generator.remove-type')}
-                    </button>
-                {/if}
+                <button onclick={() => nbrTypesFilter--} type="button" disabled={nbrTypesFilter === 1}>
+                    {t('form.generator.remove-type')}
+                </button>
             </fieldset>
             <fieldset>
                 <legend>Stade</legend>
@@ -142,15 +137,16 @@
             </li>
             {#if form?.success}
                 {#each results as pokemon, i (pokemon['_id'])}
-                    <li in:fly|global={{ delay: 75 * i}}>
+                    <li in:fly|global={{ delay: 75 * i }}>
                         <img class="sprite" src="{SPRITE_PICTURE_URL}{pokemon['Number']}.png" alt={pokemon['Name']} />
                         <h3>#{pokemon['Number']}</h3>
                         <h2 title={pokemon['I18n'][currentLang]}>
                             <a href="/pokemon/{pokemon['_id']}" target="_blank" class="link"> {pokemon['I18n'][currentLang]}</a>
                         </h2>
                         <p>
-                            <PokemonTypes types={[pokemon['Type1'], pokemon['Type2']]} helperPosition={i >= form.results.length / 2 ? 'top' : 'bottom'}
-                            ></PokemonTypes>
+                            <PokemonTypes
+                                types={[pokemon['Type1'], pokemon['Type2']]}
+                                helperPosition={i >= form.results.length / 2 ? 'top' : 'bottom'}></PokemonTypes>
                         </p>
                         <input type="checkbox" bind:group={selectedNames} value={pokemon['_id'].toString()} />
                     </li>
@@ -273,7 +269,6 @@
                         grid-column: 1 / -1;
                     }
                 }
-
 
                 & > li {
                     display: grid;

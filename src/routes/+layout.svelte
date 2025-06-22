@@ -1,32 +1,22 @@
 <script lang="ts">
-    import type { WithId } from 'mongodb';
     import { onMount, setContext } from 'svelte';
-    import { slide } from 'svelte/transition';
+    import { fly } from 'svelte/transition';
 
     import { dev } from '$app/environment';
     import t from '$lib/i18n/i18n.svelte';
 
-    import type { Box } from '$lib/types/box.js';
-    import { setTrainer } from '$lib/state/trainer.svelte.js';
-    import type { Trainer } from '$lib/types/mongo/trainer.js';
-    import { setBox, setBoxes } from '$lib/state/boxes.svelte.js';
     import { GET_POKEMON_SPECIES_MOVES } from '$lib/constants/api.js';
+    import { setBox, setBoxes } from '$lib/state/boxes.svelte.js';
+    import { setMoves, setPokemon, setPokemonParty, setSpecies } from '$lib/state/pokemon.svelte.js';
+    import { setTrainer } from '$lib/state/trainer.svelte.js';
+    import type { Box } from '$lib/types/box.js';
     import { type DbPartnerPokemon } from '$lib/types/mongo/pokemon.js';
-    import {
-        setMoves,
-        setPokemon,
-        setPokemonParty,
-        setSpecies,
-    } from '$lib/state/pokemon.svelte.js';
+    import type { Trainer } from '$lib/types/mongo/trainer.js';
 
-    import ItemListResult from '$lib/components/ItemListResult.svelte';
-    import MoveListResult from '$lib/components/MoveListResult.svelte';
-    import AbilityListResult from '$lib/components/AbilityListResult.svelte';
     import LangSwitcher from '$lib/components/lodestones/LangSwitcher.svelte';
-    import NatureListResult from '$lib/components/NatureListResult.svelte';
-    import PokemonListResult from '$lib/components/PokemonListResult.svelte';
-    import { getSavingState, getStorageOrDefault } from '$lib/state/storage.svelte.js';
     import SaveStateIcon from '$lib/components/SaveStateIcon.svelte';
+    import { getSavingState, getStorageOrDefault } from '$lib/state/storage.svelte.js';
+    import SearchResults from '$lib/components/lodestones/SearchResults.svelte';
 
     let { children, data } = $props();
 
@@ -36,14 +26,6 @@
     let showSearch: boolean = $state(false);
     let isSaving = $derived(getSavingState());
     let results: { name: string; results: any[] }[] = $state([] as any);
-    
-    const mapCollectionToComponent = {
-        Abilities: AbilityListResult,
-        Items: ItemListResult,
-        Moves: MoveListResult,
-        Pokedex: PokemonListResult,
-        Natures: NatureListResult,
-    };
 
     const search = (target: EventTarget & HTMLInputElement) => {
         if (debounce) clearTimeout(debounce);
@@ -86,17 +68,25 @@
         </li>
         <li></li>
         <li>
-            <a href="/"><button class="primary">🔴 {t('home.layout.action-pokemon')}</button></a>
+            <a href="/">🔴 {t('home.layout.action-pokemon')}</a>
         </li>
         <li>
-            <a href="/me"><button class="primary">👤 {t('home.layout.action-me')}</button></a>
+            <a href="/me">👤 {t('home.layout.action-me')}</a>
         </li>
         <li>
-            <a href="/generator"><button class="primary">🎰 {t('home.layout.action-generator')}</button></a>
+            <a href="/generator">🎰 {t('home.layout.action-generator')}</a>
+        </li>
+        <li class="navigation-group">
+            <a href="#.">⇲ {t('home.layout.action-resources')}</a>
+            <nav>
+                <li>
+                    <a href="/items">🎒 {t('home.layout.action-resources-items')}</a>
+                </li>
+            </nav>
         </li>
         {#if dev}
             <a href="/admin">
-                <button class="primary">⚙️ {t('home.layout.action-admin')}</button>
+                ⚙️ {t('home.layout.action-admin')}
             </a>
         {/if}
     </nav>
@@ -109,9 +99,7 @@
             <LangSwitcher></LangSwitcher>
         </li>
         <li>
-            <button class="primary" onclick={() => (showSearch = !showSearch)}
-                >🔍 {t('home.layout.action-search')}</button
-            >
+            <button class="primary" onclick={() => (showSearch = !showSearch)}>🔍 {t('home.layout.action-search')}</button>
         </li>
     </nav>
 </header>
@@ -121,23 +109,9 @@
 </main>
 
 {#if showSearch}
-    <aside class="wrapper" data-title={t('home.layout.action-search')} transition:slide={{ duration: 250 }}>
-        <input
-            type="text"
-            placeholder={t('home.layout.placeholder-search')}
-            oninput={({ currentTarget }) => search(currentTarget)}
-        />
-        <ul>
-            {#each results as collection}
-                {@const ListResultComponent = mapCollectionToComponent[collection.name]}
-                {#if collection.results.length > 0}
-                    <h2>{collection.name}</h2>
-                    {#each collection.results as result (result._id)}
-                        <ListResultComponent value={result}></ListResultComponent>
-                    {/each}
-                {/if}
-            {/each}
-        </ul>
+    <aside class="wrapper" data-title={t('home.layout.action-search')} transition:fly={{ duration: 250, x: '50' }}>
+        <input type="text" placeholder={t('home.layout.placeholder-search')} oninput={({ currentTarget }) => search(currentTarget)} />
+        <SearchResults bind:showSearch {results}></SearchResults>
     </aside>
 {/if}
 
@@ -154,7 +128,38 @@
         & > nav {
             display: flex;
             align-items: center;
-            gap: var(--large-gap);
+            align-content: center;
+            gap: calc(var(--large-gap) * 2);
+
+            & > li.navigation-group {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+
+                &:hover > nav {
+                    display: block;
+                }
+
+                & > nav {
+                    display: none;
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    width: 100%;
+                    background-color: var(--background-third-color);
+                    z-index: 2;
+
+                    & > li {
+                        padding: var(--medium-gap);
+                        width: 100%;
+                        text-align: center;
+
+                        & > a {
+                            width: 100%;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -168,10 +173,11 @@
 
     aside {
         z-index: 2;
-        grid-area: 2 / 3 / 2 / 3;
+        grid-area: 2 / 2 / 2 / -1;
 
         display: grid;
         grid-template: auto 1fr / 100%;
+        gap: var(--large-gap);
         box-shadow: 0px 0px var(--large-gap) var(--small-gap) var(--background-color);
 
         & > input {
@@ -183,14 +189,6 @@
                 color: var(--text-color);
                 opacity: 0.5;
             }
-        }
-
-        & > ul {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: var(--small-gap);
-            overflow-y: auto;
         }
     }
 </style>

@@ -38,12 +38,12 @@
         grid-column: 3;
 
         display: grid;
-        grid-template: calc(100svh - 8svh - 5rem) / 100%;
+        grid-template: 1fr / 100%;
         gap: var(--large-gap);
 
         & > ul {
-            display: grid;
-            grid-auto-rows: auto;
+            display: flex;
+            flex-direction: column;
             gap: var(--medium-gap);
             overflow: auto;
 
@@ -54,6 +54,7 @@
 
                 border-radius: var(--large-gap);
                 padding-inline-end: var(--large-gap);
+                background-color: var(--background-third-color);
 
                 & > img:first-child {
                     height: 100%;

@@ -1,60 +1,23 @@
 <script lang="ts">
     import t from '$lib/i18n/i18n.svelte';
-    import { SPRITE_PICTURE_URL } from '$lib/constants/urls';
-    import { getIconFromRank } from '$lib/functions/getIconFromData';
-    import { getPkmnTypeColor } from '$lib/functions/getPkmnTypeColor';
-    import { computeCoverage, fetchFullTypes } from '$lib/functions/getTypesRelationship';
-
-    import Popover from '$lib/components/fragments/Popover.svelte';
-    import TypesRelationships from '$lib/components/TypesRelationships.svelte';
 
     let { data } = $props();
-    let { pokemons, move } = data;
+    let { item } = data;
 
-    let isOpen: boolean = $state(false);
-    let typesRef: HTMLUListElement | null = $state(null);
-
-    let typeName: string = $state(move['Type'].toLocaleLowerCase());
-    let relationships = computeCoverage(fetchFullTypes([typeName]));
+    let pocketName = $derived(`item-${item["Pocket"].toLocaleLowerCase()}`)
 </script>
 
-<div class="infos">
+<div class="infos {pocketName}">
     <div class="id wrapper" data-title="Matricule">
-        <h1>{move['Name']}</h1>
-        <sub>{t(`move.category.${move['Category']}`)}</sub>
-        <q>{move['Description']}</q>
+        <h1>{item['Name']}</h1>
+        <sub>{t(`item.category.${item['Pocket']}`)} > {t(`item.category.${item['Category']}`)}</sub>
+        <q>{item['Description']}</q>
     </div>
-    <div class="battle-stats wrapper" data-title={t(`move.data.info`)}>
-        <ul
-            class="types"
-            bind:this={typesRef}
-            onmouseover={() => (isOpen = true)}
-            onmouseleave={() => (isOpen = false)}
-            onfocus={() => (isOpen = !isOpen)}
-        >
-            <li style:background={getPkmnTypeColor(typeName)}>{t(`pokemon.type.${typeName}`)}</li>
-        </ul>
-        <Popover element={typesRef} {isOpen} position="top">
-            <TypesRelationships {relationships}></TypesRelationships>
-        </Popover>
-        <p>{t(`move.data.power`)} {move['Power']}</p>
-        <p>
-            {t(`move.data.accuracy`)}
-            {move['Accuracy1']}
-            {#if move['Accuracy2']}
-                + {move['Accuracy2']}
-            {/if}
-        </p>
-        <p>
-            {t(`move.data.damage`)}
-            {t(`character.attribute.${move['Damage1']}`)}
-            {#if move['Damage2']}
-                + {t(`character.attribute.${move['Damage2']}`)}
-            {/if}
-        </p>
-        <code>
-            {t(`move.data.target`)}{move['Target']}
-        </code>
+    <div class="battle-stats wrapper" data-title={t(`item.data.info`)}>
+        <p>{t(`item.data.power`)} {item['TrainerPrice']}</p>
+        <p>{t(`item.data.one-use`)} {item['OneUse']}</p>
+        <p>{t(`item.data.cures`)} {item['Cures']}</p>
+        <code> </code>
     </div>
 </div>
 
@@ -76,19 +39,19 @@
     {/if}
 {/snippet}
 
-<div class="moves wrapper" data-title="Effets">
+<div class="moves wrapper {pocketName}" data-title="Effets">
     <h1>{t(`move.data.battle-effects`)}</h1>
-    <blockquote>{move['Effect']}</blockquote>
+    <!-- <blockquote>{move['Effect']}</blockquote> -->
     <h1>{t(`move.data.attributes`)}</h1>
-    {@render decomposeObject(move['Attributes'])}
+    <!-- {@render decomposeObject(move['Attributes'])} -->
     <br />
     <h1>{t(`move.data.additional-effects`)}</h1>
-    {@render decomposeObject(move['AddedEffects'])}
+    <!-- {@render decomposeObject(move['AddedEffects'])} -->
 </div>
 
-<div class="learners wrapper" data-title={t(`move.data.learners`)}>
+<div class="learners wrapper {pocketName}" data-title={t(`move.data.learners`)}>
     <ul>
-        {#each pokemons as learner}
+        <!-- {#each pokemons as learner}
             {@const learnedRank = learner['Moves'].find((m) => m['Name'] === move['Name'])?.Learned || 'Starter'}
             {@const rankIcon = getIconFromRank(learnedRank)}
             <li class="learner">
@@ -96,17 +59,38 @@
                 <a href="/pokemon/{learner['_id']}">{learner['Name']}</a>
                 <img src="/icons/{rankIcon}" alt={learnedRank} />
             </li>
-        {/each}
+        {/each} -->
     </ul>
 </div>
 
 <style>
+    .item-helditem {
+        --accent-color: var(--tough);
+    }
+
+    .item-traineritems {
+        --accent-color: var(--cool);
+    }
+
+    .item-evolutionitems {
+        --accent-color: var(--cute);
+    }
+
+    .item-pokeballs {
+        --accent-color: var(--beauty);
+    }
+
+    .item-medicine {
+        --accent-color: var(--clever);
+    }
+
     div.infos {
         grid-column: 1;
 
         display: grid;
         grid-template-rows: 1fr 1fr;
         gap: var(--large-gap);
+
 
         & > .id {
             display: grid;
@@ -173,12 +157,12 @@
         grid-column: 3;
 
         display: grid;
-        grid-template: 1fr / 100%;
+        grid-template: 100% / 100%;
         gap: var(--large-gap);
 
         & > ul {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-auto-rows: min-content;
             gap: var(--medium-gap);
             overflow: auto;
 
@@ -189,12 +173,15 @@
 
                 border-radius: var(--large-gap);
                 padding-inline-end: var(--large-gap);
-                background-color: var(--background-third-color);
+                background-color: var(--background-fourth-color);
+
+                &:hover {
+                    background-color: var(--background-third-color);
+                }
 
                 & > img:first-child {
                     height: 100%;
-                    object-position: 0px -0.75rem;
-                    border-radius: var(--medium-gap);
+                    object-position: 0px -0.5rem;
                 }
             }
         }

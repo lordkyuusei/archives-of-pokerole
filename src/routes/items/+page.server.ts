@@ -5,10 +5,6 @@ import type { PageServerLoad } from "./$types";
 import { getAllItemsFromDb } from "$lib/server/database/functions";
 
 export const load: PageServerLoad = async () => {
-    if (dev) {
-        const items = await getAllItemsFromDb();
-        return { items };
-    } else {
-        return error(404);
-    }
+    const items = await getAllItemsFromDb();
+    return { items };
 }

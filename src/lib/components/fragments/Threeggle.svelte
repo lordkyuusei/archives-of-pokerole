@@ -70,7 +70,7 @@
         }
 
         &:has(> input:checked) {
-            background: linear-gradient(to right, var(--accent-color) 0%, var(--background-third-color) 100%);
+            background: linear-gradient(to right, var(--accent-color) 0%, var(--text-color) 100%);
 
             &::before {
                 margin-left: calc(50% - (calc(var(--larger-gap) - var(--smaller-gap) * 2) / 2));
@@ -80,7 +80,7 @@
         }
 
         &:has(> input:first-child:checked) {
-            background: var(--background-third-color);
+            background: var(--text-color);
 
             &::before {
                 margin-left: calc(0% - 0.5px);

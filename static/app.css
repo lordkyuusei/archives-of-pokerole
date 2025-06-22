@@ -97,6 +97,7 @@ button {
 }
 
 a:link, a:visited {
+    text-underline-offset: var(--medium-gap);
     color: var(--text-color);
 }
 
@@ -118,6 +119,13 @@ button {
     &:hover {
         background-color: var(--background-third-color);
     }
+
+    &.selected {
+        border-color: var(--text-color);
+        color: var(--background-second-color);
+        background-color: var(--text-color);
+    }
+
 }
 
 button.secondary {
@@ -138,16 +146,33 @@ button.round {
     background-color: var(--text-color);
 }
 
-button.group {
+:not(.buttons-group) > button.group {
     height: 100%;
     padding-inline: 0;
 
-    &:first-of-type{
+    &:first-of-type {
         border-radius: var(--small-gap) 0 0 var(--small-gap);
         padding-inline-end: 0;
     }
 
     &:last-of-type {
+        border-radius: 0 var(--small-gap) var(--small-gap) 0;
+        padding-inline-start: 0;
+    }
+}
+
+.buttons-group {
+    & button.group {
+        width: 100%;
+        border-radius: 0;
+    }
+
+    &:first-of-type button.group {
+        border-radius: var(--small-gap) 0 0 var(--small-gap);
+        padding-inline-end: 0;
+    }
+
+    &:last-of-type button.group {
         border-radius: 0 var(--small-gap) var(--small-gap) 0;
         padding-inline-start: 0;
     }
@@ -305,6 +330,7 @@ table {
         z-index: 2;
         
         & > tr > th {
+            height: var(--large-gap);
             padding-block: var(--large-gap);
             background-color: var(--background-color);
 

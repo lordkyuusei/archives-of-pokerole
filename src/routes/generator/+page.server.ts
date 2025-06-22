@@ -1,17 +1,10 @@
 import type { ThreegleState } from "$lib/constants/threegle";
-import { generatePokemon } from "$lib/server/database/functions";
+import { generatePokemon, getAllItemsFromDb } from "$lib/server/database/functions";
 import type { Actions } from "@sveltejs/kit";
 
-type FormData = {
-    [key: string]: string,
-    'rank-1': string,
-    'rank-2': string,
-    stage: 'on' | 'off',
-    starter: 'on' | 'off',
-}
-
-export const load = () => {
-
+export const load = async () => {
+    const items = await getAllItemsFromDb();
+    return { items };
 };
 
 export const actions = {

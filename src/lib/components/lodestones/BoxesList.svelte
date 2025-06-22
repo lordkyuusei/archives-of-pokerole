@@ -105,7 +105,6 @@
 
 <style>
     boxes-list {
-        aspect-ratio: 1;
         margin-left: auto;
 
         height: 100%;
