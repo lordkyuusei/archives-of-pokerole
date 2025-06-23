@@ -27,8 +27,6 @@ export const generatePokemon = (pokemon: WithId<DbPokemon>, rank: number, nature
     const socIncrease = successiveRankUps.reduce((acc, rankup) => acc + rankup.config.socialPoints, 0);
     const skillIncrease = successiveRankUps.map((rankup) => rankup.config.skillPoints);
 
-    console.log(`Generating a ${rankUpSettings[rank].to} ${pokemon.Name}`);
-    console.log({... pokemon })
     const attrReferences = [
         [pokemon.Strength, pokemon.MaxStrength],
         [pokemon.Dexterity, pokemon.MaxDexterity],
@@ -40,8 +38,6 @@ export const generatePokemon = (pokemon: WithId<DbPokemon>, rank: number, nature
     let attributes = Array.from({ length: 5 }, (_, i) => attrReferences[i][0]);
     let remainingAttr = attrIncrease;
 
-    console.log(`Stats: ${attrReferences.join(', ')}. Points: ${remainingAttr}`);
-
     while (!pokemon.Legendary && remainingAttr > 0) {
         const randomIndex = Math.floor(Math.random() * 5);
         if (attributes[randomIndex] < attrReferences[randomIndex][1]) {
@@ -50,9 +46,7 @@ export const generatePokemon = (pokemon: WithId<DbPokemon>, rank: number, nature
         }
     }
 
-    console.log(`Attributes: ${attributes.join(', ')}`);
-
-    let socials = Array.from({ length: 5 }, (_, i) => 0);
+    let socials = Array.from({ length: 5 }, (_, i) => 1);
     let remainingSoc = socIncrease;
 
     while (remainingSoc > 0) {
@@ -60,11 +54,9 @@ export const generatePokemon = (pokemon: WithId<DbPokemon>, rank: number, nature
         if (socials[randomIndex] < 5) {
             socials[randomIndex]++;
             remainingSoc--;
-            console.log('increased social points for index', randomIndex, 'to', socials[randomIndex]);
         }
     }
 
-    console.log(`Socials: ${socials.join(', ')}`);
     let skills = Array.from({ length: PokemonSkills.length }, (_, i) => 0);
 
     skillIncrease.forEach((points, n) => {
@@ -78,7 +70,6 @@ export const generatePokemon = (pokemon: WithId<DbPokemon>, rank: number, nature
         }
     });
 
-    console.log(`Skills: ${skills.join(', ')}`);
     const learnableMoveset = getLearnableMoves(pokemon.Moves, rankUpSettings[rank].to);
     const learnableAmount = attributes[4] + 2;
 
