@@ -60,7 +60,8 @@
                     Math.min(nonNegociableLowerBoundary, rank2Boundary);
                 return generatePokemon(pokemon, randomRank, randomNature, boxId);
             } else {
-                const rankSettingIndex = rankUpSettings.findIndex((r) => r.to === lowestRank);
+                const isChosenRankValid = nonNegociableLowerBoundary <= rank1Boundary;
+                const rankSettingIndex = rankUpSettings.findIndex((r) => isChosenRankValid ? r.to === rank1 : r.to === lowestRank);
                 if (rankSettingIndex === -1) return;
 
                 return generatePokemon(pokemon, rankSettingIndex, randomNature, boxId);

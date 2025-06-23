@@ -32,11 +32,17 @@
         const rank = (elements.namedItem('rank') as HTMLSelectElement).value as DbPokemonRank;
         const boxId = (elements.namedItem('box-id') as HTMLSelectElement).value;
 
-        const rankSettingIndex = rankUpSettings.findIndex((r) => r.to === rank);
-        if (rankSettingIndex === -1) return;
+        const rank1Boundary = rankUpSettings.findIndex((r) => r.to === rank);
 
         const randomNature = natures[Math.floor(Math.random() * natures.length)].Nature.split(' ')[0];
-        const { rawPokemonData } = generatePokemon(pokemon, pokemonRankOrder[rankUpSettings[rankSettingIndex].to], randomNature, boxId);
+
+        const lowestRank = findLowestRankPossible([pokemon]);
+        const nonNegociableLowerBoundary = pokemonRankOrder[lowestRank];
+        const isChosenRankValid = nonNegociableLowerBoundary <= rank1Boundary;
+        const rankSettingIndex = rankUpSettings.findIndex((r) => (isChosenRankValid ? r.to === rank : r.to === lowestRank));
+        if (rankSettingIndex === -1) return;
+
+        const { rawPokemonData } = generatePokemon(pokemon, rankSettingIndex, randomNature, boxId);
         const partnerPokemon = convertPokemonToPartner(pokemon, rawPokemonData);
 
         onPokemonGenerated(partnerPokemon);
