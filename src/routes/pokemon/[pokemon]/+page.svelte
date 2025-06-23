@@ -18,6 +18,11 @@
     let isAddPokemonFormOpen: boolean = $state(false);
     let showGeneratePokemonForm: boolean = $state(false);
 
+    const onPokemonCreate = (pokemon: DbPartnerPokemon) => {
+        addPokemonToParty(pokemon);
+        goto('/', { invalidateAll: true });
+    };
+
     const onPokemonGenerated = (pokemon: DbPartnerPokemon) => {
         addPokemonToParty(pokemon);
         goto('/', { invalidateAll: true });
@@ -43,7 +48,7 @@
     <GeneratePokemonForm {pokemon} bind:isOpen={showGeneratePokemonForm} {onPokemonGenerated}></GeneratePokemonForm>
 {/if}
 {#if isAddPokemonFormOpen}
-    <AddNewPokemonForm {pokemon} bind:isOpen={isAddPokemonFormOpen}></AddNewPokemonForm>
+    <AddNewPokemonForm {pokemon} bind:isOpen={isAddPokemonFormOpen} {onPokemonCreate}></AddNewPokemonForm>
 {/if}
 
 <style>

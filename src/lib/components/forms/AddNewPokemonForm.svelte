@@ -9,12 +9,12 @@
     import { pokemonRankOrder } from '$lib/constants/pokemonRank';
     import { AILMENTS } from '$lib/constants/ailments';
     import { convertPokemonToPartner } from '$lib/functions/convertPokemonToPartner';
-    import type { DbPokemon, DbPokemonMove, DbPokemonRank } from '$lib/types/mongo/pokemon';
+    import type { DbPartnerPokemon, DbPokemon, DbPokemonMove, DbPokemonRank } from '$lib/types/mongo/pokemon';
 
     import Dialog from '../fragments/Dialog.svelte';
 
-    type Props = { pokemon: WithId<DbPokemon>; isOpen: boolean };
-    let { pokemon: pkmn, isOpen = $bindable() }: Props = $props();
+    type Props = { pokemon: WithId<DbPokemon>; isOpen: boolean, onPokemonCreate: (pokemon: DbPartnerPokemon) => void };
+    let { pokemon: pkmn, isOpen = $bindable(), onPokemonCreate }: Props = $props();
 
     let natures: () => WithId<DbNature>[] = getContext('natures');
 
@@ -72,11 +72,9 @@
             .filter((x) => ['SELECT', 'INPUT'].includes(x.tagName))
             .reduce((newPokemon, { name, value }) => ({ ...newPokemon, [name]: value }), {} as any);
 
+        pokemon["Box"] = 0;
         const partner = convertPokemonToPartner(pkmn, pokemon);
-        const team = JSON.parse(localStorage.getItem('team') || '[]');
-        localStorage.setItem('team', JSON.stringify([...team, partner]));
-
-        goto('/');
+        onPokemonCreate(partner);
     };
 </script>
 

@@ -88,6 +88,12 @@ body {
 nav,
 ul {
     list-style: none;
+
+    &.row {
+        display: flex;
+        flex-direction: row;
+        gap: var(--large-gap);
+    }
 }
 
 a,
