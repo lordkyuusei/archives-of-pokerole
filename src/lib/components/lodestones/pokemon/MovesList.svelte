@@ -56,6 +56,8 @@
             goto('/moves/' + id);
         }
     };
+
+    $inspect(pokemon.Moves)
 </script>
 
 <moves-list class:wrapper={onMoveSelection === null} class:selectable={onMoveSelection !== null} data-title="Capacités">
@@ -87,7 +89,7 @@
                             </ul>
                         </td>
                         <td><img class="category" src="/icons/{icon}" title={move['Category']} alt={move['Category']} /></td>
-                        <td><img class="rank" src="/icons/{rankIcon}" title={pokemon.Moves[i].Learned} alt={pokemon.Moves[i].Learned} /></td>
+                        <td><img class="rank" src="/icons/{rankIcon}" title={pokemon.Moves[i]?.Learned} alt={pokemon.Moves[i]?.Learned} /></td>
                     </tr>
                 {/each}
             </tbody>
