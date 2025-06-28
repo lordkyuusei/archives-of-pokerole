@@ -12,7 +12,7 @@
     import { rankUpSettings } from '$lib/constants/rankUpConfigs';
     import { SPRITE_PICTURE_URL } from '$lib/constants/urls';
     import { convertPokemonToPartner } from '$lib/functions/convertPokemonToPartner';
-    import { findLowestRankPossible, generatePokemon } from '$lib/functions/generatePokemon';
+    import { findLowestRankPossible, findPokemonArchetype, generatePokemon } from '$lib/functions/generatePokemon';
     import t from '$lib/i18n/i18n.svelte';
     import { getLang, type Lang } from '$lib/i18n/lang.svelte';
     import { getBoxes } from '$lib/state/boxes.svelte';
@@ -24,7 +24,9 @@
 
     let boxes = $derived(getBoxes());
     let currentLang: Lang = $derived(getLang());
-    let results = $derived(form?.results || []);
+
+    let pokemonList = $derived(form?.results.pokemon || []);
+    let movesList = $derived(form?.results.moves || []);
 
     let nbrTypesFilter: number = $state(1);
     let selectedNames: string[] = $state([]);
@@ -32,7 +34,6 @@
     let isRange: boolean = $state(false);
     let allowedRanks: string[] = $state(Object.keys(pokemonRankOrder).splice(1));
 
-    $inspect(form?.results)
     const generatePokemons = (event: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }) => {
         event.preventDefault();
         const { elements } = event.currentTarget;
@@ -41,31 +42,37 @@
         const rank2 = (elements.namedItem('rank-2') as HTMLSelectElement).value as DbPokemonRank;
         const boxId = (elements.namedItem('box-id') as HTMLSelectElement).value;
         const isRange = (elements.namedItem('rank-range') as HTMLInputElement).checked;
+        const isStrategic = (elements.namedItem('is-strategic') as HTMLInputElement).checked;
 
         const rank1Boundary = rankUpSettings.findIndex((r) => r.to === rank1);
         const rank2Boundary = rankUpSettings.findIndex((r) => r.to === rank2);
         if (rank1Boundary === -1 || (isRange && rank2Boundary === -1)) return;
 
         const generatedPokemons = selectedNames.map((name) => {
-            const pokemon = form?.results.find((p) => p._id.toString() === name);
+            const pokemon = pokemonList.find((p) => p._id.toString() === name);
             if (!pokemon) return { pokemon: null, rawPokemonData: null };
+            const moveset = movesList.filter((m) => pokemon['Moves'].flatMap((x) => x.Name).includes(m['Name']));
+            if (moveset.length === 0) return { pokemon: null, rawPokemonData: null };
 
             const randomNature = data.natures[Math.floor(Math.random() * data.natures.length)].Nature.split(' ')[0];
             const lowestRank = findLowestRankPossible([pokemon]);
             const nonNegociableLowerBoundary = pokemonRankOrder[lowestRank];
 
+            let chosenRank = nonNegociableLowerBoundary;
+
             if (isRange) {
-                const randomRank =
+                chosenRank =
                     Math.floor(Math.random() * (Math.abs(nonNegociableLowerBoundary - rank2Boundary) + 1)) +
                     Math.min(nonNegociableLowerBoundary, rank2Boundary);
-                return generatePokemon(pokemon, randomRank, randomNature, boxId);
             } else {
                 const isChosenRankValid = nonNegociableLowerBoundary <= rank1Boundary;
-                const rankSettingIndex = rankUpSettings.findIndex((r) => isChosenRankValid ? r.to === rank1 : r.to === lowestRank);
+                const rankSettingIndex = rankUpSettings.findIndex((r) => (isChosenRankValid ? r.to === rank1 : r.to === lowestRank));
                 if (rankSettingIndex === -1) return;
 
-                return generatePokemon(pokemon, rankSettingIndex, randomNature, boxId);
+                chosenRank = rankSettingIndex;
             }
+
+            return generatePokemon(pokemon, moveset, chosenRank, randomNature, boxId, isStrategic);
         });
 
         generatedPokemons.forEach(({ pokemon, rawPokemonData }) => {
@@ -80,7 +87,7 @@
 
     const toggleCheckAll = () => {
         if (selectedNames.length === 0) {
-            selectedNames = form?.results.map((pokemon) => pokemon._id.toString()) || [];
+            selectedNames = pokemonList.map((pokemon) => pokemon._id.toString()) || [];
         } else {
             selectedNames = [];
         }
@@ -137,7 +144,7 @@
                 <input type="checkbox" bind:checked={isAllChecked} oninput={() => toggleCheckAll()} />
             </li>
             {#if form?.success}
-                {#each results as pokemon, i (pokemon['_id'])}
+                {#each pokemonList as pokemon, i (pokemon['_id'])}
                     <li in:fly|global={{ delay: 75 * i }}>
                         <img class="sprite" src="{SPRITE_PICTURE_URL}{pokemon['Number']}.png" alt={pokemon['Name']} />
                         <h3>#{pokemon['Number']}</h3>
@@ -145,9 +152,8 @@
                             <a href="/pokemon/{pokemon['_id']}" target="_blank" class="link"> {pokemon['I18n'][currentLang]}</a>
                         </h2>
                         <p>
-                            <PokemonTypes
-                                types={[pokemon['Type1'], pokemon['Type2']]}
-                                helperPosition={i >= form.results.length / 2 ? 'top' : 'bottom'}></PokemonTypes>
+                            <PokemonTypes types={[pokemon['Type1'], pokemon['Type2']]} helperPosition={i >= pokemonList.length / 2 ? 'top' : 'bottom'}
+                            ></PokemonTypes>
                         </p>
                         <input type="checkbox" bind:group={selectedNames} value={pokemon['_id'].toString()} />
                     </li>
@@ -182,6 +188,11 @@
                             <option value={rank}>{rank}</option>
                         {/each}
                     </select>
+                </fieldset>
+                <fieldset disabled={!selectedNames.length}>
+                    <legend>Stratégie</legend>
+                    <label for="is-strategic">Stratégique ?</label>
+                    <Toggle name="is-strategic" toggled={true}></Toggle>
                 </fieldset>
                 <fieldset disabled={!selectedNames.length}>
                     <legend>Sauvegarde</legend>
@@ -258,6 +269,7 @@
                 display: flex;
                 flex-direction: column;
                 height: 100%;
+                overflow-y: auto;
 
                 &.results {
                     justify-content: space-between;

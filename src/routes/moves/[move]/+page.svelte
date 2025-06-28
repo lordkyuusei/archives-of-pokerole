@@ -16,6 +16,8 @@
 
     let typeName: string = $state(move['Type'].toLocaleLowerCase());
     let relationships = computeCoverage(fetchFullTypes([typeName]));
+
+    $inspect(move["AddedEffects"]["FixedDamage"])
 </script>
 
 <div class="infos">

@@ -41,7 +41,7 @@
 
     onMount(async () => {
         const pokemonsData = getStorageOrDefault<DbPartnerPokemon[]>('team', []);
-        const pokemonsBoxes = getStorageOrDefault<Box[]>('boxes', []);
+        const pokemonsBoxes = getStorageOrDefault<Box[]>('boxes', [{ id: 0, name: t('home.pokemon.title-team'), selected: true }]);
         const pokemonTrainer = getStorageOrDefault<Trainer | null>('trainer', null);
 
         const pokemonNames = pokemonsData.map((p) => p.specie).join(',');

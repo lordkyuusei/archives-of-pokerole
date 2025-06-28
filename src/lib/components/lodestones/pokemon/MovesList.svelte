@@ -28,9 +28,7 @@
                 ? `${t(`character.attribute.${move['Damage1']}`)} + ${t(`character.attribute.${move['Damage2']}`)} + ${move['Power']}`
                 : `${t(`character.attribute.${move['Damage1']}`)} + ${move['Power']}`;
 
-        return move['Type'] === pokemon['Type1'] || move['Type'] === pokemon['Type2']
-            ? `${rawDamage} + 1 (STAB)`
-            : rawDamage;
+        return move['Type'] === pokemon['Type1'] || move['Type'] === pokemon['Type2'] ? `${rawDamage} + 1 (STAB)` : rawDamage;
     };
 
     const getMoveInformation = (move: WithId<DbMove>) => {
@@ -88,22 +86,8 @@
                                 {/if}
                             </ul>
                         </td>
-                        <td
-                            ><img
-                                class="category"
-                                src="/icons/{icon}"
-                                title={move['Category']}
-                                alt={move['Category']}
-                            /></td
-                        >
-                        <td
-                            ><img
-                                class="rank"
-                                src="/icons/{rankIcon}"
-                                title={pokemon.Moves[i].Learned}
-                                alt={pokemon.Moves[i].Learned}
-                            /></td
-                        >
+                        <td><img class="category" src="/icons/{icon}" title={move['Category']} alt={move['Category']} /></td>
+                        <td><img class="rank" src="/icons/{rankIcon}" title={pokemon.Moves[i].Learned} alt={pokemon.Moves[i].Learned} /></td>
                     </tr>
                 {/each}
             </tbody>
@@ -143,6 +127,10 @@
                 & > tbody {
                     & > tr.selected {
                         background-color: var(--background-accent-color);
+                    }
+
+                    & > tr {
+                        position: relative;
                     }
 
                     & span.type {

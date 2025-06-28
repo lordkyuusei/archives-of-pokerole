@@ -3,7 +3,7 @@
 
     type Props = {
         children: any,
-        element: HTMLUListElement,
+        element: HTMLElement,
         isOpen: boolean,
         position: Position
     }

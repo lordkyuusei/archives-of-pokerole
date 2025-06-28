@@ -16,7 +16,7 @@
 
     let { isOpen = $bindable(), boxes, pokemons, updateBoxes }: Props = $props();
 
-    let currentBoxes: Box[] = $state(boxes.filter(b => b.id !== 0));
+    let currentBoxes: Box[] = $state(boxes.filter((b) => b.id !== 0));
 
     let addNewBox = () => {
         currentBoxes = [
@@ -24,6 +24,7 @@
             {
                 id: parseInt(crypto.getRandomValues(new Uint32Array(1))[0].toString()),
                 name: `${t('boxes.form.new-box-name') + ' ' + (currentBoxes.length + 1)}`,
+                selected: false,
             },
         ];
     };
@@ -36,6 +37,8 @@
         updateBoxes(boxes);
         isOpen = false;
     };
+
+    $inspect({boxes}, {currentBoxes});
 </script>
 
 <Dialog bind:isOpen title={t('boxes.form.title-box')}>

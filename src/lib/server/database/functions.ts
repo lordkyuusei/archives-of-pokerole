@@ -46,7 +46,7 @@ const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTran
     })
 }
 
-export const generatePokemon = async (types: string[], ranks: string[], isEvolved: ThreegleState, isStarter: ThreegleState, isLegendary: ThreegleState): Promise<WithId<DbPokemon>[]> => {
+export const generatePokemon = async (types: string[], ranks: string[], isEvolved: ThreegleState, isStarter: ThreegleState, isLegendary: ThreegleState): Promise<{ pokemon: WithId<DbPokemon>[], moves: WithId<DbMove>[] }> => {
     let query: any = {};
 
     if (types[0] !== "Typeless") {
@@ -71,9 +71,10 @@ export const generatePokemon = async (types: string[], ranks: string[], isEvolve
 
     const collection = mongo.collection<DbPokemon>("Pokedex");
     const matchingPokemon = await collection.find(query).toArray();
+    const shuffledPokemon = matchingPokemon.sort(() => Math.random() - 0.5).slice(0, 10);
 
-    const shuffledPokemon = matchingPokemon.sort(() => Math.random() - 0.5);
-    return shuffledPokemon.slice(0, 10);
+    const pokemonMoves = await getMovesFromPokemon(shuffledPokemon.flatMap(p => p.Moves.map(m => m.Name)));
+    return { pokemon: shuffledPokemon, moves: pokemonMoves };
 }
 
 export const searchDatabase = async (searchText: string) => {

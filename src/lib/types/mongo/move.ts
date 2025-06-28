@@ -40,6 +40,7 @@ export type DbAddedEffects = {
     "Heal"?: DbHealEffect,
     "StatChanges": DbMoveStatChangeEffect[],
     "Ailments": DbMoveAilmentEffect[],
+    "FixedDamage"?: DbMoveAilmentEffect,
 }
 
 export type DbMoveAilmentEffect = {

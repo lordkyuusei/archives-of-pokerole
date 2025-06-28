@@ -20,8 +20,8 @@ export const actions = {
         const isStarted = Number(data.get('starter')?.toString()) as ThreegleState;
         const isLegendary = Number(data.get('legendary')?.toString()) as ThreegleState;
 
-        const results = await generatePokemon(types, ranks, isEvolved, isStarted, isLegendary);
+        const { pokemon, moves} = await generatePokemon(types, ranks, isEvolved, isStarted, isLegendary);
 
-        return { success: true, message: "OK", results: results };
+        return { success: true, message: "OK", results: { pokemon, moves } };
     }
 } satisfies Actions

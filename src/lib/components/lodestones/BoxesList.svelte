@@ -66,8 +66,6 @@
         pokemons[matchingPokemonIndex].box = box.id;
         updatePokemonList(pokemons);
     };
-
-    $inspect(pokemons);
 </script>
 
 <boxes-list role="tree">
