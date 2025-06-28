@@ -34,7 +34,7 @@
             </li>
         {/each}
     </ul>
-    <div style="display: grid; grid-auto-flow: column; gap: var(--large-gap);">
+    <div class="dialog-actions">
         <button onclick={() => onPrevTab()}>{t('previous')}</button>
         <button onclick={() => onNextTab()} disabled={skillPoints - skillsIncreaseVal !== 0}>{t('next')}</button>
     </div>
@@ -60,6 +60,12 @@
                 gap: var(--large-gap);
                 align-items: end;
             }
+        }
+
+        & > div.dialog-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--medium-gap);
         }
     }
 </style>

@@ -57,6 +57,10 @@
                 align-items: end;
             }
         }
+
+        & > button {
+            justify-self: end;
+        }
     }
 
 </style>

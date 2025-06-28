@@ -54,7 +54,7 @@
     {:else}
         <p>{t('form.training.error-new-moveset')}</p>
     {/if}
-    <div class="form-actions">
+    <div class="dialog-actions">
         <button onclick={() => onPrevTab()}>{t('previous')}</button>
         <button
             onclick={() => onNextTab()}
@@ -76,11 +76,10 @@
             overflow-y: auto;
         }
 
-        & > div.form-actions {
-            display: grid;
-            grid-auto-flow: column;
-            padding-inline: var(--large-gap);
-            gap: var(--large-gap);
+        & > div.dialog-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--medium-gap);
         }
     }
 </style>

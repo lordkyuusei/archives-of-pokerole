@@ -16,8 +16,7 @@
         onSubmit: () => void;
     };
 
-    let { movesUpdates, attrUpdates, socialUpdates, skillUpdates, stat, onPrevTab, onSubmit }: Props =
-        $props();
+    let { movesUpdates, attrUpdates, socialUpdates, skillUpdates, stat, onPrevTab, onSubmit }: Props = $props();
 </script>
 
 <rank-up-summary>
@@ -58,7 +57,7 @@
             </ul>
         {/if}
     </div>
-    <div style="display: grid; grid-auto-flow: column; gap: var(--large-gap);">
+    <div class="dialog-actions">
         <button onclick={() => onPrevTab()}>{t('previous')}</button>
         <button onclick={() => onSubmit()}>{t('finish')}</button>
     </div>
@@ -91,6 +90,12 @@
                     align-items: start;
                 }
             }
+        }
+
+        & > div.dialog-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--medium-gap);
         }
     }
 </style>

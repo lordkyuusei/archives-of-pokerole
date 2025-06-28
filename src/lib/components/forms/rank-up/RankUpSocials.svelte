@@ -33,9 +33,9 @@
             </li>
         {/each}
     </ul>
-    <div style="display: grid; grid-auto-flow: column; gap: var(--large-gap);">
+    <div class="dialog-actions">
         <button onclick={() => onPrevTab()}>{t('previous')}</button>
-        <button onclick={() => onNextTab()}>{t('next')}</button>
+        <button onclick={() => onNextTab()} disabled={socialPoints - socIncreaseVal !== 0}>{t('next')}</button>
     </div>
 </rank-up-socials>
 
@@ -60,6 +60,12 @@
                 gap: var(--large-gap);
                 align-items: end;
             }
+        }
+
+        & > div.dialog-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--medium-gap);
         }
     }
 </style>
