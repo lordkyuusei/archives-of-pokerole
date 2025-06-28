@@ -43,6 +43,7 @@
         const boxId = (elements.namedItem('box-id') as HTMLSelectElement).value;
         const isRange = (elements.namedItem('rank-range') as HTMLInputElement).checked;
         const isStrategic = (elements.namedItem('is-strategic') as HTMLInputElement).checked;
+        const isDebug = (elements.namedItem('is-debug') as HTMLInputElement).checked;
 
         const rank1Boundary = rankUpSettings.findIndex((r) => r.to === rank1);
         const rank2Boundary = rankUpSettings.findIndex((r) => r.to === rank2);
@@ -75,14 +76,16 @@
             return generatePokemon(pokemon, moveset, chosenRank, randomNature, boxId, isStrategic);
         });
 
-        generatedPokemons.forEach(({ pokemon, rawPokemonData }) => {
-            if (!pokemon || !rawPokemonData) return;
-
-            const partnerPokemon = convertPokemonToPartner(pokemon, rawPokemonData);
-            addPokemonToParty(partnerPokemon);
-        });
-
-        goto('/', { invalidateAll: true });
+        if (!isDebug) {
+            generatedPokemons.forEach(({ pokemon, rawPokemonData }) => {
+                if (!pokemon || !rawPokemonData) return;
+    
+                const partnerPokemon = convertPokemonToPartner(pokemon, rawPokemonData);
+                addPokemonToParty(partnerPokemon);
+            });
+    
+            goto('/', { invalidateAll: true });
+        }
     };
 
     const toggleCheckAll = () => {
@@ -204,6 +207,8 @@
                             <option value={box.id}>{box.name}</option>
                         {/each}
                     </select>
+                    <label for="is-debug">Debug</label>
+                    <Toggle name="is-debug" toggled={false}></Toggle>
                 </fieldset>
             </div>
             <button disabled={!selectedNames.length} type="submit">
