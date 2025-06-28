@@ -114,6 +114,8 @@
                         {/each}
                     </select>
                 {/each}
+                <label for="type-combination">Combiner les types ?</label>
+                <Toggle name="type-combination" toggled={false}></Toggle>
                 <button onclick={() => nbrTypesFilter++} type="button">
                     {t('form.generator.add-type')}
                 </button>
@@ -192,7 +194,7 @@
                 <fieldset disabled={!selectedNames.length}>
                     <legend>Stratégie</legend>
                     <label for="is-strategic">Stratégique ?</label>
-                    <Toggle name="is-strategic" toggled={true}></Toggle>
+                    <Toggle name="is-strategic" toggled={false}></Toggle>
                 </fieldset>
                 <fieldset disabled={!selectedNames.length}>
                     <legend>Sauvegarde</legend>
@@ -270,13 +272,9 @@
                 flex-direction: column;
                 height: 100%;
                 overflow-y: auto;
-
-                &.results {
-                    justify-content: space-between;
-                }
+                gap: var(--medium-gap);
 
                 &:not(.results) {
-                    gap: var(--medium-gap);
 
                     & > li p {
                         grid-column: 1 / -1;

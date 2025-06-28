@@ -13,14 +13,15 @@ export const actions = {
 
         const dataAsArray = [...data.entries()];
 
-        console.log(dataAsArray);
         const types = dataAsArray.filter(([key, _]) => key.startsWith('type-')).map(([_, value]) => value as string);
-        const ranks = dataAsArray.filter(([key, _]) => key.startsWith('rank-')).map(([_, value]) => value as string);
+
+        const areTypesCombined = data.get('type-combination') === 'on';
         const isEvolved = Number(data.get('stage')?.toString()) as ThreegleState;
         const isStarted = Number(data.get('starter')?.toString()) as ThreegleState;
         const isLegendary = Number(data.get('legendary')?.toString()) as ThreegleState;
 
-        const { pokemon, moves} = await generatePokemon(types, ranks, isEvolved, isStarted, isLegendary);
+        console.log(areTypesCombined);
+        const { pokemon, moves} = await generatePokemon(types, areTypesCombined, isEvolved, isStarted, isLegendary);
 
         return { success: true, message: "OK", results: { pokemon, moves } };
     }

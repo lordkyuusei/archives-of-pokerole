@@ -42,7 +42,7 @@
         const rankSettingIndex = rankUpSettings.findIndex((r) => (isChosenRankValid ? r.to === rank : r.to === lowestRank));
         if (rankSettingIndex === -1) return;
 
-        const { rawPokemonData } = generatePokemon(pokemon, rankSettingIndex, randomNature, boxId);
+        const { rawPokemonData } = generatePokemon(pokemon, [], rankSettingIndex, randomNature, boxId);
         const partnerPokemon = convertPokemonToPartner(pokemon, rawPokemonData);
 
         onPokemonGenerated(partnerPokemon);

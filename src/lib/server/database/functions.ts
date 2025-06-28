@@ -46,13 +46,19 @@ const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTran
     })
 }
 
-export const generatePokemon = async (types: string[], ranks: string[], isEvolved: ThreegleState, isStarter: ThreegleState, isLegendary: ThreegleState): Promise<{ pokemon: WithId<DbPokemon>[], moves: WithId<DbMove>[] }> => {
+export const generatePokemon = async (types: string[], areTypesCombined: boolean, isEvolved: ThreegleState, isStarter: ThreegleState, isLegendary: ThreegleState): Promise<{ pokemon: WithId<DbPokemon>[], moves: WithId<DbMove>[] }> => {
     let query: any = {};
 
     if (types[0] !== "Typeless") {
-        query = {
-            $or: [{ Type1: { $in: types } }, { Type2: { $in: types } }],
-        };
+        if (areTypesCombined) {
+            query = {
+                $and: [{ Type1: { $in: types } }, { Type2: { $in: types } }]
+            };
+        } else {
+            query = {
+                $or: [{ Type1: { $in: types } }, { Type2: { $in: types } }],
+            };
+        }
     }
 
     if (isEvolved !== ThreegleState.NA) {

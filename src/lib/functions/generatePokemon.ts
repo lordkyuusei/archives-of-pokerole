@@ -115,9 +115,9 @@ const buildStrategicMoves = (pokemon: WithId<DbPokemon>, attributes: number[], m
         const bestSetupMoves = findSuitableSetupMove(role, supportMoves, nbrSupportMoves);
 
         const nbrOffensiveMoves = learnableAmount - (nbrSupportMoves - (nbrSupportMoves - bestSetupMoves.length));
-        const chosenSTABs = STABMoves.slice(0, nbrOffensiveMoves);
+        const chosenMoves = damagingMoves.slice(0, nbrOffensiveMoves);
 
-        const finalMoves = [...chosenSTABs.slice(0, nbrOffensiveMoves), ...bestSetupMoves];
+        const finalMoves = [...chosenMoves.slice(0, nbrOffensiveMoves), ...bestSetupMoves];
         return learnableMoveset.filter(m => finalMoves.some(fm => fm["Name"] === m["Name"]));
     }
 
@@ -230,22 +230,16 @@ const buildRandomSocials = (socials: number[], socIncrease: number): number[] =>
 const buildStrategicAttributes = (attributes: number[], attrReferences: number[][], attrIncrease: number, archetype: PokemonArchetype, role: PokemonRole): number[] => {
     const statRatios = attrReferences.map(([baseStat, maxStat]) => baseStat / maxStat);
 
-    /*   STR, DEX, VIT, SPE, INS */
-    // @TODO: remove useless archetype array of weights.
-
-    const archetypeWeights: number[] =
-        archetype === 'Physical' ? [0.4, 0.3, 0.1, 0.0, 0.2] :
-            archetype === 'Special' ? [0.0, 0.2, 0.1, 0.4, 0.3] :
-                [0.2, 0.2, 0.2, 0.2, 0.2];
-
     const roleWeights: number[] =
-        role === 'DPS' && archetype === 'Physical' ? [0.5, 0.3, 0.1, 0.0, 0.1] :
-            role === 'DPS' && archetype === 'Special' ? [0.0, 0.2, 0.1, 0.5, 0.2] :
-                role === 'Tank' && archetype === 'Physical' ? [0.1, 0.1, 0.4, 0.0, 0.4] :
-                    role === 'Tank' && archetype === 'Special' ? [0.0, 0.1, 0.4, 0.2, 0.3] :
-                        [0.2, 0.2, 0.2, 0.2, 0.2]
+        role === 'DPS' && archetype === 'Physical' ? [0.45, 0.3, 0.1, 0.0, 0.15] :
+            role === 'DPS' && archetype === 'Special' ? [0.0, 0.3, 0.1, 0.45, 0.15] :
+                role === 'DPS' && archetype === 'Mixed' ? [0.1, 0.3, 0.1, 0.3, 0.2] :
+                    role === 'Tank' && archetype === 'Physical' ? [0.15, 0.05, 0.4, 0.0, 0.4] :
+                        role === 'Tank' && archetype === 'Special' ? [0.0, 0.05, 0.4, 0.15, 0.4] :
+                            role === 'Tank' && archetype === 'Mixed' ? [0.1, 0.1, 0.4, 0.1, 0.3] :
+                                [0.2, 0.2, 0.2, 0.2, 0.2]
 
-    const combinedWeights = statRatios.map((ratio, i) => ratio + archetypeWeights[i] + roleWeights[i]);
+    const combinedWeights = statRatios.map((ratio, i) => ratio + roleWeights[i]);
     const totalWeight = combinedWeights.reduce((sum, weight) => sum + weight, 0);
     const normalizedWeights = combinedWeights.map(weight => weight / totalWeight);
 
@@ -281,13 +275,13 @@ const buildRandomAttributes = (attributes: number[], attrReferences: number[][],
     return attributes;
 }
 
-// const mapIndexToStat = {
-//     0: 'Strength',
-//     1: 'Dexterity',
-//     2: 'Vitality',
-//     3: 'Special',
-//     4: 'Insight',
-// }
+const mapIndexToStat = {
+    0: 'Strength',
+    1: 'Dexterity',
+    2: 'Vitality',
+    3: 'Special',
+    4: 'Insight',
+}
 
 export const generatePokemon = (pokemon: WithId<DbPokemon>, moveset: WithId<DbMove>[], rank: number, nature: string, boxId: string, isStrategic: boolean = false) => {
     const successiveRankUps = rankUpSettings.slice(0, rank + 1);
@@ -320,11 +314,11 @@ export const generatePokemon = (pokemon: WithId<DbPokemon>, moveset: WithId<DbMo
         buildStrategicSkills(Array.from({ length: PokemonSkills.length }, (_) => 0), skillIncrease, chosenMoveDetails, archetype, role) :
         buildRandomSkills(Array.from({ length: PokemonSkills.length }, (_) => 0), skillIncrease);
 
-    // console.log(`[GENERATING NEW POKEMON] - ${pokemon.Name} - ${rankUpSettings[rank].to} ${role} ${archetype}`);
-    // console.log(`------ ATTRIBUTES ------\n${attributes.map((attr, i) => `${mapIndexToStat[i]}: ${attrReferences[i][0]} -> ${attr} (+${attr - attrReferences[i][0]})/${attrReferences[i][1]}`).join('\n')}`);
-    // console.log(`------ SOCIALS ------\n${socials.map((soc, i) => `${soc} (${i + 1})`).join('\n')}`);
-    // console.log(`------ MOVES ------\n${moves.map((move, i) => `${i + 1}. ${move.Name} (${move.Learned})`).join('\n')}`);
-    // console.log(`------ SKILLS ------\n${skills.map((skill, i) => `${PokemonSkills[i]}: ${skill}`).join('\n')}`);
+    console.log(`[GENERATING NEW POKEMON] - ${pokemon.Name} - ${rankUpSettings[rank].to} ${role} ${archetype}`);
+    console.log(`------ ATTRIBUTES ------\n${attributes.map((attr, i) => `${mapIndexToStat[i]}: ${attrReferences[i][0]} -> ${attr} (+${attr - attrReferences[i][0]})/${attrReferences[i][1]}`).join('\n')}`);
+    console.log(`------ SOCIALS ------\n${socials.map((soc, i) => `${soc} (${i + 1})`).join('\n')}`);
+    console.log(`------ MOVES ------\n${moves.map((move, i) => `${i + 1}. ${move.Name} (${move.Learned})`).join('\n')}`);
+    console.log(`------ SKILLS ------\n${skills.map((skill, i) => `${PokemonSkills[i]}: ${skill}`).join('\n')}`);
 
     const rawPokemonData = {
         Nickname: pokemon.Name,
