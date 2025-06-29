@@ -11,14 +11,19 @@
     import type { DbNature } from '$lib/types/mongo/nature';
     import type { DbPartnerPokemon, DbPokemon, DbPokemonRank } from '$lib/types/mongo/pokemon';
     import Dialog from '../fragments/Dialog.svelte';
+    import type { DbMove } from '$lib/types/mongo/move';
+    import Toggle from '../fragments/Toggle.svelte';
+    import Threeggle from '../fragments/Threeggle.svelte';
+    import { ThreegleState } from '$lib/constants/threegle';
 
     type Props = {
         pokemon: WithId<DbPokemon>;
+        moves: WithId<DbMove>[];
         isOpen: boolean;
         onPokemonGenerated: (pokemon: DbPartnerPokemon) => void;
     };
 
-    let { pokemon, isOpen = $bindable(), onPokemonGenerated }: Props = $props();
+    let { pokemon, moves, isOpen = $bindable(), onPokemonGenerated }: Props = $props();
     let boxes = $derived(getBoxes());
 
     const natures = (getContext<DbNature[]>('natures') as unknown as () => DbNature[])();
@@ -31,6 +36,9 @@
 
         const rank = (elements.namedItem('rank') as HTMLSelectElement).value as DbPokemonRank;
         const boxId = (elements.namedItem('box-id') as HTMLSelectElement).value;
+        const amountCheckbox = (elements.namedItem('amount') as HTMLInputElement).value as unknown as ThreegleState;
+        const isStrategic = (elements.namedItem('is-strategic') as HTMLInputElement).checked;
+        const amount = amountCheckbox === ThreegleState.OFF ? 1 : amountCheckbox === ThreegleState.NA ? 5 : 10;
 
         const rank1Boundary = rankUpSettings.findIndex((r) => r.to === rank);
 
@@ -42,10 +50,12 @@
         const rankSettingIndex = rankUpSettings.findIndex((r) => (isChosenRankValid ? r.to === rank : r.to === lowestRank));
         if (rankSettingIndex === -1) return;
 
-        const { rawPokemonData } = generatePokemon(pokemon, [], rankSettingIndex, randomNature, boxId);
-        const partnerPokemon = convertPokemonToPartner(pokemon, rawPokemonData);
+        Array.from({ length: amount }).forEach(_ => {
+            const { rawPokemonData } = generatePokemon(pokemon, moves, rankSettingIndex, randomNature, boxId, isStrategic);
+            const partnerPokemon = convertPokemonToPartner(pokemon, rawPokemonData);
+            onPokemonGenerated(partnerPokemon);
+        })
 
-        onPokemonGenerated(partnerPokemon);
         isOpen = false;
     };
 </script>
@@ -62,9 +72,13 @@
                         <option value={rank}>{rank}</option>
                     {/each}
                 </select>
+                <label for="is-strategic">Stratégique ?</label>
+                <Toggle name="is-strategic" toggled={false}></Toggle>
             </fieldset>
             <fieldset>
                 <legend>Sauvegarde</legend>
+                <label for="amount">Nombre ?</label>
+                <Threeggle name="amount" toggled={1} labels={["1", "5", "10"]}></Threeggle>
                 <label for="box-id">Boîte</label>
                 <select id="box-id" name="box-id">
                     {#each boxes as box}

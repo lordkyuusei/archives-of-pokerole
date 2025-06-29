@@ -45,7 +45,7 @@
 </div>
 
 {#if showGeneratePokemonForm}
-    <GeneratePokemonForm {pokemon} bind:isOpen={showGeneratePokemonForm} {onPokemonGenerated}></GeneratePokemonForm>
+    <GeneratePokemonForm {pokemon} {moves} bind:isOpen={showGeneratePokemonForm} {onPokemonGenerated}></GeneratePokemonForm>
 {/if}
 {#if isAddPokemonFormOpen}
     <AddNewPokemonForm {pokemon} bind:isOpen={isAddPokemonFormOpen} {onPokemonCreate}></AddNewPokemonForm>
