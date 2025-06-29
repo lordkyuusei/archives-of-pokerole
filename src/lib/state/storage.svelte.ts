@@ -1,7 +1,8 @@
+import { SAVE_DEBOUNCE_DELAY } from "$lib/constants/storage";
 import type { Trainer } from "$lib/types/mongo/trainer";
 import { Tween } from "svelte/motion";
 
-let debounce: NodeJS.Timeout | null = null;
+let debounce: { [key: string]: NodeJS.Timeout | null } = {};
 let isSaving: boolean = $state(false);
 
 export const getSavingState = () => isSaving;
@@ -17,11 +18,12 @@ export const getStorageOrDefault = <T>(key: string, defaultValue: T): T => {
 }
 
 export const setStorage = (key: string, value: any) => {
-    if (debounce) clearTimeout(debounce);
+    if (debounce[key] !== null) clearTimeout(debounce[key]);
 
     isSaving = true;
-    debounce = setTimeout(() => {
+    debounce[key] = setTimeout(() => {
         localStorage.setItem(key, JSON.stringify(value));
         isSaving = false;
-    }, 500)
+        console.log('saved', key);
+    }, SAVE_DEBOUNCE_DELAY)
 }

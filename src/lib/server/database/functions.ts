@@ -1,11 +1,14 @@
-import { ThreegleState } from "$lib/constants/threegle";
-import type { DbAbility } from "$lib/types/mongo/ability";
+import type { WithId } from "mongodb";
+
+import { mongo } from "./mongodb";
 import { type DbItem } from "$lib/types/mongo/item";
 import type { DbMove } from "$lib/types/mongo/move";
+import type { DbUser } from "$lib/types/mongo/user";
 import type { DbNature } from "$lib/types/mongo/nature";
+import { ThreegleState } from "$lib/constants/threegle";
+import type { DbAbility } from "$lib/types/mongo/ability";
 import { type DbPokemon } from "$lib/types/mongo/pokemon";
-import type { WithId } from "mongodb";
-import { mongo } from "./mongodb";
+import { hash } from "crypto";
 
 const updatePokemonData = (pokemonList: WithId<DbPokemon>[], pokemonListWithTranslations: any[]) => {
     const getFrenchMegaWord = (id: number) => {
@@ -114,7 +117,7 @@ export const searchDatabaseMult = async (pokemonSearchText: string, movesSearchT
 }
 
 export const findInDatabase = async (searchText: string) => {
-    const collections = await mongo.listCollections().toArray();
+    const collections = await mongo.listCollections({ name: { $nin: ["Users"] } }).toArray();
 
     const results = collections.map(async (collection) => {
         const { name } = collection;
@@ -133,6 +136,49 @@ export const findInDatabase = async (searchText: string) => {
 
 export const findMultInDatabase = async (searchArray: string[], collection: string) => {
     return await mongo.collection(collection).find({ "_id": { $in: searchArray } }).toArray();
+}
+
+const getUserFromDb = async (username: string) =>
+    await mongo.collection<DbUser>("Users").findOne({ Username: username });
+
+export const getUserDataFromDb = async (username: string, passKey: string | null) => {
+    const user = await getUserFromDb(username);
+    if (!user) return null;
+
+    if (user.PassKey === null && passKey === null) {
+        return user;
+    }
+
+    if (passKey === null) return null;
+
+    const hashedPassKey = hash('sha512', passKey);
+    if (user.PassKey !== hashedPassKey && user.PassKey !== null) return null;
+
+    const { Username, PassKey, ...userData } = user;
+    return userData;
+}
+
+export const saveUserToDb = async (username: string, passKey: string, content: any) => {
+    const user = await getUserFromDb(username);
+    const hashedPassKey = hash('sha512', passKey);
+
+    if (!user) {
+        const newUser: DbUser = {
+            Username: username,
+            PassKey: hashedPassKey,
+            ...content
+        };
+
+        return await mongo.collection<DbUser>("Users").insertOne(newUser);
+    }
+
+    if (user.PassKey !== hashedPassKey && user.PassKey !== null) return null;
+
+    return await mongo.collection<DbUser>("Users").updateOne(
+        { Username: username },
+        { $set: { PassKey: hashedPassKey, ...content } }
+    );
+
 }
 
 export const getNaturesFromDb = async () =>

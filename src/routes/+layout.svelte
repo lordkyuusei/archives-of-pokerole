@@ -5,18 +5,21 @@
     import { dev } from '$app/environment';
     import t from '$lib/i18n/i18n.svelte';
 
-    import { GET_POKEMON_SPECIES_MOVES } from '$lib/constants/api.js';
-    import { setBox, setBoxes } from '$lib/state/boxes.svelte.js';
-    import { setMoves, setPokemon, setPokemonParty, setSpecies } from '$lib/state/pokemon.svelte.js';
-    import { setTrainer } from '$lib/state/trainer.svelte.js';
-    import type { Box } from '$lib/types/box.js';
-    import { type DbPartnerPokemon } from '$lib/types/mongo/pokemon.js';
-    import type { Trainer } from '$lib/types/mongo/trainer.js';
+    import { GET_POKEMON_SPECIES_MOVES } from '$lib/constants/api';
+    import { setBox, setBoxes } from '$lib/state/boxes.svelte';
+    import { setMoves, setPokemon, setPokemonParty, setSpecies } from '$lib/state/pokemon.svelte';
+    import { setTrainer } from '$lib/state/trainer.svelte';
+    import type { Box } from '$lib/types/box';
+    import { type DbPartnerPokemon } from '$lib/types/mongo/pokemon';
+    import type { Trainer } from '$lib/types/mongo/trainer';
 
     import LangSwitcher from '$lib/components/lodestones/LangSwitcher.svelte';
-    import SaveStateIcon from '$lib/components/SaveStateIcon.svelte';
-    import { getSavingState, getStorageOrDefault } from '$lib/state/storage.svelte.js';
     import SearchResults from '$lib/components/lodestones/SearchResults.svelte';
+    import SaveStateIcon from '$lib/components/SaveStateIcon.svelte';
+    import { getSavingState, getStorageOrDefault } from '$lib/state/storage.svelte';
+    import Settings from '$lib/components/lodestones/Settings.svelte';
+    import { setSettings } from '$lib/state/settings.svelte.js';
+    import type { Settings as _Settings } from '$lib/types/meta/settings.js';
 
     let { children, data } = $props();
 
@@ -24,6 +27,7 @@
 
     let debounce: NodeJS.Timeout | null;
     let showSearch: boolean = $state(false);
+    let showOptions: boolean = $state(false);
     let isSaving = $derived(getSavingState());
     let results: { name: string; results: any[] }[] = $state([] as any);
 
@@ -40,6 +44,7 @@
     };
 
     onMount(async () => {
+        const settings = getStorageOrDefault<_Settings>('settings', {});
         const pokemonsData = getStorageOrDefault<DbPartnerPokemon[]>('team', []);
         const pokemonsBoxes = getStorageOrDefault<Box[]>('boxes', [{ id: 0, name: t('home.pokemon.title-team'), selected: true }]);
         const pokemonTrainer = getStorageOrDefault<Trainer | null>('trainer', null);
@@ -49,6 +54,7 @@
         const request = await fetch(`${GET_POKEMON_SPECIES_MOVES}?species=${pokemonNames}&moves=${pokemonMoves}`);
         const { species, moves } = await request.json();
 
+        setSettings(settings);
         setBoxes(pokemonsBoxes);
         setBox(pokemonsBoxes[0]);
         setTrainer(pokemonTrainer);
@@ -101,6 +107,9 @@
         <li>
             <button class="primary" onclick={() => (showSearch = !showSearch)}>🔍 {t('home.layout.action-search')}</button>
         </li>
+        <li>
+            <button class="primary" onclick={() => (showOptions = !showOptions)}>⚙️ {t('home.layout.action-options')}</button>
+        </li>
     </nav>
 </header>
 
@@ -109,9 +118,14 @@
 </main>
 
 {#if showSearch}
-    <aside class="wrapper" data-title={t('home.layout.action-search')} transition:fly={{ duration: 250, x: '50' }}>
+    <aside class="wrapper search" data-title={t('home.layout.action-search')} transition:fly={{ duration: 250, x: '50' }}>
         <input type="text" placeholder={t('home.layout.placeholder-search')} oninput={({ currentTarget }) => search(currentTarget)} />
         <SearchResults bind:showSearch {results}></SearchResults>
+    </aside>
+{/if}
+{#if showOptions}
+    <aside class="wrapper settings" data-title={t('home.layout.title-options')} transition:fly={{ duration: 250, x: '50' }}>
+        <Settings></Settings>
     </aside>
 {/if}
 
@@ -173,12 +187,19 @@
 
     aside {
         z-index: 2;
-        grid-area: 2 / 2 / 2 / -1;
 
         display: grid;
         grid-template: auto 1fr / 100%;
         gap: var(--large-gap);
         box-shadow: 0px 0px var(--large-gap) var(--small-gap) var(--background-color);
+
+        &.search {
+            grid-area: 2 / 2 / 2 / -1;
+        }
+
+        &.settings {
+            grid-area: 2 / 3;
+        }
 
         & > input {
             width: 100%;

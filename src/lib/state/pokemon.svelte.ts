@@ -2,6 +2,7 @@ import type { DbMove } from "$lib/types/mongo/move";
 import type { DbPartnerPokemon, DbPokemon } from "$lib/types/mongo/pokemon";
 import type { WithId } from "mongodb";
 import { setStorage } from "./storage.svelte";
+import { KEY_TEAM } from "$lib/constants/storage";
 
 let pokemon: DbPartnerPokemon | null = $state(null);
 let pokemons: DbPartnerPokemon[] = $state([]);
@@ -41,7 +42,7 @@ export const setPokemonProperty = <T extends keyof DbPartnerPokemon>(property: T
 
 export const setPokemonParty = (newPokemons: DbPartnerPokemon[]) => {
     pokemons = newPokemons;
-    setStorage('team', pokemons);
+    setStorage(KEY_TEAM, pokemons);
 }
 
 export const updatePokemonInParty = (updatedPokemon: DbPartnerPokemon) => {
@@ -49,7 +50,7 @@ export const updatePokemonInParty = (updatedPokemon: DbPartnerPokemon) => {
     if (pokemonIndex === -1) return;
 
     pokemons = pokemons.with(pokemonIndex, updatedPokemon);
-    setStorage('team', pokemons);
+    setStorage(KEY_TEAM, pokemons);
 }
 
 export const setSpecie = (newSpecie: WithId<DbPokemon> | null) => {
@@ -70,11 +71,11 @@ export const setPkmnMoves = (newPkmnMoves: WithId<DbMove>[]) => {
 
 export const addPokemonToParty = (newPokemon: DbPartnerPokemon) => {
     pokemons = [...pokemons, newPokemon];
-    setStorage('team', pokemons);
+    setStorage(KEY_TEAM, pokemons);
 }
 
 export const removePokemonFromParty = (pokemon: DbPartnerPokemon) => {
     const index = pokemons.findIndex(p => p.id === pokemon.id);
     pokemons = pokemons.toSpliced(index, 1);
-    setStorage('team', pokemons);
+    setStorage(KEY_TEAM, pokemons);
 }
