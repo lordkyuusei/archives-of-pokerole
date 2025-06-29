@@ -30,9 +30,8 @@
 
 <style>
     form {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        align-items: end;
+        display: flex;
+        justify-content: end;
         gap: var(--large-gap);
     }
 </style>
