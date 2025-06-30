@@ -117,9 +117,8 @@ export const searchDatabaseMult = async (pokemonSearchText: string, movesSearchT
 }
 
 export const findInDatabase = async (searchText: string) => {
-    const collections = await mongo.listCollections({ name: { $nin: ["Users"] } }).toArray();
-
-    const results = collections.map(async (collection) => {
+    const collections = await mongo.listCollections({}, { nameOnly: true }).toArray();
+    const results = collections.filter(c => c.name !== "Users").map(async (collection) => {
         const { name } = collection;
         const collectionData = await mongo.collection(name).find({
             $or: [

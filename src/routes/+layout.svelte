@@ -43,6 +43,11 @@
         }, 250);
     };
 
+    const closeAsides = () => {
+        showSearch = false;
+        showOptions = false;
+    };
+
     onMount(async () => {
         const settings = getStorageOrDefault<_Settings>('settings', {});
         const pokemonsData = getStorageOrDefault<DbPartnerPokemon[]>('team', []);
@@ -63,7 +68,14 @@
         setMoves(moves);
         setPokemon(pokemonsData[0]);
     });
+
+
+    function logCapture(event: MouseEvent & { currentTarget: EventTarget & HTMLElement; }) {
+        console.log(event);
+    }
 </script>
+
+<svelte:body onkeydown={(e) => { if (e.key === 'Escape') closeAsides()}} />
 
 <header class="wrapper">
     <nav>
